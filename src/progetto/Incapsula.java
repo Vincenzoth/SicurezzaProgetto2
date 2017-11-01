@@ -173,6 +173,7 @@ public class Incapsula {
 		return cipher;
 	}
 
+	
 	public void cipherFile() {
 
 		FileOutputStream fos;

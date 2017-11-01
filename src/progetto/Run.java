@@ -10,17 +10,14 @@ public class Run {
 
 		System.out.println("\n  -------     -------   Keymanager:");
 		try {
-			Incapsula incul = new Incapsula("01","02","DES", "CFB", "PKCS5Padding", "/file/documento.pdf");		
-			incul.cipherFile();
-			//incul.decipherFile();
 			
 			KeyManager km = new KeyManager();
 			
-			/*
+			
 			 // Aggiungi utenti
 			km.newUser("01", 2048);
 			km.newUser("02", 1024);
-			*/
+			
 			
 			
 			
@@ -34,6 +31,12 @@ public class Run {
 			System.out.println("Chiave privata: " + privKeyCod);
 			System.out.println("Chiave pubblica: " + pubKeyCod);
 			System.out.println("ok");
+			
+			
+			
+			Incapsula incul = new Incapsula("01","02","DES", "CFB", "PKCS5Padding", "/file/documento.pdf");		
+			incul.cipherFile();
+			//incul.decipherFile();
 			
 
 		} catch (Exception e) {

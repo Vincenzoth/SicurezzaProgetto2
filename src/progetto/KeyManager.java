@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -27,8 +28,9 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 public class KeyManager {
-	final static String fileName = "data/keys";
-	final static String fileKey = "data/keyOfkeys";
+	final static String path = Paths.get(System.getProperty("user.dir")).toString();
+	final static String fileName = path + "/data/keys";
+	final static String fileKey = path + "/data/keyOfkeys";
 	private KeyPairGenerator keyGenRSA;
 	private Cipher cipher;
 	private SecretKey key;
