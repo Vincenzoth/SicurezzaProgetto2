@@ -7,14 +7,13 @@ import java.security.PublicKey;
 public class Run {
 
 	public static void main(String[] args) {
-		Incapsula incul = new Incapsula("DES", "CFB", "PKCS5Padding", "/file/documento.pdf");		
-		incul.cipherFile();
-		incul.decipherFile();
-
-		
 
 		System.out.println("\n  -------     -------   Keymanager:");
 		try {
+			Incapsula incul = new Incapsula("01","02","DES", "CFB", "PKCS5Padding", "/file/documento.pdf");		
+			incul.cipherFile();
+			//incul.decipherFile();
+			
 			KeyManager km = new KeyManager();
 			
 			/*
@@ -24,10 +23,10 @@ public class Run {
 			*/
 			
 			
-			/*
+			
 			// Rimuovi utente
-			km.removeUser("01");
-			*/
+			// km.removeUser("01");
+			
 			
 			PrivateKey privKeyCod = km.getPrivateKeyCod("02");
 			PublicKey pubKeyCod = km.getPublicKeyCod("02");
