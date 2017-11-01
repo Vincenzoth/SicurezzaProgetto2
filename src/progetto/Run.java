@@ -1,5 +1,9 @@
 package progetto;
 
+
+import java.security.PrivateKey;
+import java.security.PublicKey;
+
 public class Run {
 
 	public static void main(String[] args) {
@@ -7,6 +11,37 @@ public class Run {
 		incul.cipherFile();
 		incul.decipherFile();
 
+		
+
+		System.out.println("\n  -------     -------   Keymanager:");
+		try {
+			KeyManager km = new KeyManager();
+			
+			/*
+			 // Aggiungi utenti
+			km.newUser("01", 2048);
+			km.newUser("02", 1024);
+			*/
+			
+			
+			/*
+			// Rimuovi utente
+			km.removeUser("01");
+			*/
+			
+			PrivateKey privKeyCod = km.getPrivateKeyCod("02");
+			PublicKey pubKeyCod = km.getPublicKeyCod("02");
+			
+			System.out.println("Chiave privata: " + privKeyCod);
+			System.out.println("Chiave pubblica: " + pubKeyCod);
+			System.out.println("ok");
+			
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 }
