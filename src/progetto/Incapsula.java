@@ -114,6 +114,7 @@ public class Incapsula {
 		try {
 
 			byte privata[] = userKeyPr.getEncoded();
+			System.out.println("chiave lunghezza "+privata.length);
 			// byte pubblica[] = userKeyPub.getEncoded();
 
 			KeyFactory kf = KeyFactory.getInstance("RSA");
@@ -122,7 +123,7 @@ public class Incapsula {
 
 			Cipher c = Cipher.getInstance("RSA/ECB/OAEPPadding");
 
-			c.init(Cipher.DECRYPT_MODE, privateKey);
+			c.init(Cipher.DECRYPT_MODE, userKeyPr);
 			byte[] decodificato = c.doFinal(cipherKey);
 			System.out.println("Chiave cifrata: " + Arrays.toString(decodificato));
 			SecretKey originalKey = new SecretKeySpec(decodificato, 0, decodificato.length, cifrario);
@@ -147,7 +148,7 @@ public class Incapsula {
 		} catch (InvalidKeySpecException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		} 
 		return null;
 
 	}
@@ -238,7 +239,7 @@ public class Incapsula {
 		try {
 			fis = new FileInputStream(new File(path + fileName + ".ts"));
 
-			byte[] cipherKey = new byte[256];
+			byte[] cipherKey = new byte[128];
 			fis.read(cipherKey);
 
 			SecretKey originalKey = decipherKey(cipherKey);

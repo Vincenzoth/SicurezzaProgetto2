@@ -36,7 +36,7 @@ public class Run {
 			
 			Incapsula incul = new Incapsula("01","02","DES", "CFB", "PKCS5Padding", "/file/documento.pdf");		
 			incul.cipherFile();
-			//incul.decipherFile();
+			incul.decipherFile();
 			
 
 		} catch (Exception e) {
