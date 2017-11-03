@@ -3,30 +3,21 @@ package progetto;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
-import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
-import javax.crypto.CipherOutputStream;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
@@ -41,18 +32,11 @@ public class Incapsula {
 	private String cifrario;
 	private String mode;
 	private String padding;
-	private String fileName;
-	private String mittente;
-	private String destinatario;
 
 	private Cipher cipher;
 	private KeyManager km;
 
-	private PrivateKey userKeyPr;
-	private PublicKey userKeyPub;
-
-	public Incapsula() throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException,
-			ClassNotFoundException, IOException {
+	public Incapsula() throws InvalidKeyException, NoSuchAlgorithmException, ClassNotFoundException, IOException, NoSuchPaddingException {
 
 		this.km = new KeyManager();
 
@@ -68,7 +52,7 @@ public class Incapsula {
 	}
 
 	public void writeCipherFile(String file, String sender, String receiver) throws IllegalBlockSizeException,
-			BadPaddingException, IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException {
+	BadPaddingException, IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException {
 
 		SecretKey secretKey = genSecretKey();
 		byte[] cipherFile = cipherFile(secretKey, file);
@@ -78,22 +62,19 @@ public class Incapsula {
 
 		fos.write(Arrays.copyOf(receiver.getBytes(), 8));
 		fos.write(ByteBuffer.allocate(4).putInt(cipherInfo.length).array());
-		// System.out.println("len enript "+cipherInfo.length);
 		fos.write(cipherInfo);
 		fos.write(cipherFile);
 
+		fos.close();
 	}
 
-	private SecretKey genSecretKey() {
+	private SecretKey genSecretKey() throws NoSuchAlgorithmException {
 		// Otteniamo un'istanza di KeyGenerator
 		KeyGenerator keyGenerator = null;
-		try {
-			keyGenerator = KeyGenerator.getInstance(cifrario);
-			if (cifrario.equals("AES"))
-				keyGenerator.init(128, new SecureRandom());
-		} catch (NoSuchAlgorithmException e) {
-			System.err.println("Impossibile generare SecretKey: " + cifrario + " non supportato");
-		}
+		keyGenerator = KeyGenerator.getInstance(cifrario);
+		if (cifrario.equals("AES"))
+			keyGenerator.init(128, new SecureRandom());
+
 		return keyGenerator.generateKey();
 	}
 
@@ -129,7 +110,6 @@ public class Incapsula {
 		PublicKey publicKey = km.getPublicKeyCod(receiver);
 		c.init(Cipher.ENCRYPT_MODE, publicKey);
 
-		// System.out.println("Chiave da cifrare: " + Arrays.toString(plainMetaInfo));
 		return c.doFinal(plainMetaInfo);
 
 	}
@@ -141,112 +121,78 @@ public class Incapsula {
 		byte[] receiver = new byte[8];
 		fis.read(receiver);
 
-		if (!Arrays.equals(receiver, Arrays.copyOf(receiverID.getBytes(), 8)))
+		if (!Arrays.equals(receiver, Arrays.copyOf(receiverID.getBytes(), 8))) {
+			fis.close();
 			throw new Exception("This message is not for you");
+		}
 
+		// POSSO FARNE A MENO, DIPENDONO DA RSA 1024 = 128 || 2048 =256
 		byte[] length = new byte[4];
 		fis.read(length);
 		int len = ByteBuffer.wrap(length).getInt();
 
 		byte[] cipherMetaInfo = new byte[len];
 		fis.read(cipherMetaInfo);
-		
+
 		byte[] depicherMetaInfo = decipherInfo(cipherMetaInfo, receiverID);
-		String sender = new String(depicherMetaInfo, 0, 8);
+		String sender = new String(depicherMetaInfo, 0, 8).replaceAll("\0", "");
 		String cifrario = new String(depicherMetaInfo, 8, 8).replaceAll("\0", "");
 		String mode = new String(depicherMetaInfo, 16, 8).replaceAll("\0", "");
 		String padding = new String(depicherMetaInfo, 24, 16).replaceAll("\0", "");
-		
-		int secretKeyLength = 8;
-		/*
+
+		int secretKeyLength;
+
 		switch(cifrario) {
-			case "DES":
-				secretKeyLength = 8;
-			case "AES":
-				secretKeyLength = 16;
-			case "DESede":
-				secretKeyLength = 24;
-		}
-		*/
-		System.out.println("lunghezza chiave "+secretKeyLength+" "+cifrario);
-		
-		if(secretKeyLength == 0)
+		case "DES":
+			secretKeyLength = 8;
+			break;
+		case "AES":
+			secretKeyLength = 16;
+			break;
+		case "DESede":
+			secretKeyLength = 24;
+			break;
+		default:
+			fis.close();
 			throw new Exception("This cipher is not for you");
-		
+		}
+
+		// ECCO L'ERRORE, NON DEVO LEGGERE DALLINPUT STREAM !!!!!
 		byte[] secretKeyArray = new byte[secretKeyLength];
-		fis.read(secretKeyArray);
+		//fis.read(secretKeyArray);
+		secretKeyArray = Arrays.copyOfRange(depicherMetaInfo, 40, 40 + secretKeyLength );
+
 		SecretKey secretKey = new SecretKeySpec(secretKeyArray, 0, secretKeyLength, cifrario);
-		
-		
+
 		IvParameterSpec iv = null;
 		if(mode!="ECB") {
-			byte[] ivBytes = new byte[cifrario.equals("AES") ? 16 : 8];		
-			fis.read(ivBytes);
+			int ivLength = cifrario.equals("AES") ? 16 : 8;
+			byte[] ivBytes = new byte[ivLength];		
+			//fis.read(ivBytes);
+			ivBytes = Arrays.copyOfRange(depicherMetaInfo, 40 + secretKeyLength, 40 + secretKeyLength + ivLength);
 			iv = new IvParameterSpec(ivBytes);
 		}
-		
+
 		initCipher(cifrario, mode, padding);
 		cipher.init(Cipher.DECRYPT_MODE, secretKey, iv);
-		System.out.println(cipher.getAlgorithm());
-		
-		FileOutputStream fos = new FileOutputStream(new File(PATH + "/file/ohyeahhhhh.pdf"));
+
+		FileOutputStream fos = new FileOutputStream(new File(PATH + "/file/DEC_" + file.substring(0, file.length() - 3)));
 		CipherInputStream cis = new CipherInputStream(fis, cipher);
-		
+
 		byte[] buffer = new byte[512];
 		int r;
 		while ((r = cis.read(buffer)) > 0) {
 			fos.write(buffer, 0, r);
 		}
-		
+
 		fis.close();
 		fos.close();
 		cis.close();
-		
-		
-
-	}
-
-	private void decipherFile() {
-
-		FileInputStream fis;
-		try {
-			fis = new FileInputStream(new File(PATH + fileName + ".ts"));
-
-			FileOutputStream fos = new FileOutputStream(new File(PATH + "/file/ohyeah.pdf"));
-			CipherInputStream cis = new CipherInputStream(fis, cipher);
-
-			byte[] mit = new byte[8];
-			byte[] dest = new byte[8];
-
-			// Recuperiamo il mittente e il destinatario dal file
-			cis.read(mit);
-			cis.read(dest);
-
-			String mittente = new String(mit, "UTF8");
-			String destinatario = new String(dest, "UTF8");
-			System.out.println("Mittente: " + mittente);
-			System.out.println("Destinatario: " + destinatario);
-
-			byte[] buffer = new byte[512];
-			int r;
-			while ((r = cis.read(buffer)) > 0) {
-				fos.write(buffer, 0, r);
-			}
-
-			fos.close();
-			cis.close();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 
 	}
 
 	private byte[] decipherInfo(byte[] cipherMetaInfo, String receiver) throws NoSuchAlgorithmException,
-			NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+	NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 
 		PrivateKey pk = km.getPrivateKeyCod(receiver);
 		Cipher c = Cipher.getInstance("RSA/ECB/OAEPPadding");

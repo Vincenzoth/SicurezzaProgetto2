@@ -30,15 +30,16 @@ public class Run {
 			
 			System.out.println("Chiave privata: " + privKeyCod);
 			System.out.println("Chiave pubblica: " + pubKeyCod);
-			System.out.println("ok");
+			System.out.println();
 			
 			
 			
 			Incapsula incul = new Incapsula();
 			incul.initCipher("DES", "CBC", "PKCS5Padding");
-			//"01","02",, "/file/documento.pdf"
 			incul.writeCipherFile("documento.pdf", "01", "02");
 			incul.writeDecipherFile("documento.pdf.ts", "02");
+			
+			System.out.println("File Criptato");
 			
 
 		} catch (Exception e) {
