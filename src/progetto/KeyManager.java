@@ -28,9 +28,10 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 public class KeyManager {
-	final static String path = Paths.get(System.getProperty("user.dir")).toString();
-	final static String fileName = path + "/data/keys";
-	final static String fileKey = path + "/data/keyOfkeys";
+	final static String PATH = Paths.get(System.getProperty("user.dir")).toString();
+	final static String FILE_NAME = PATH + "/data/key";
+	final static String FILE_KEY = PATH + "/data/keyOfkeys";
+	
 	private KeyPairGenerator keyGenRSA;
 	private Cipher cipher;
 	private SecretKey key;
@@ -52,13 +53,13 @@ public class KeyManager {
 	}
 
 	private void loadMap() throws InvalidKeyException, FileNotFoundException, IOException, ClassNotFoundException {
-		File f = new File(fileName);
+		File f = new File(FILE_NAME);
 		if(f.exists() && !f.isDirectory()) { 
 			// il file delle chiavi esiste
 			this.cipher.init(Cipher.DECRYPT_MODE, key);
 
 			ObjectInputStream ois;
-			ois = new ObjectInputStream(new CipherInputStream(new FileInputStream(fileName), cipher));
+			ois = new ObjectInputStream(new CipherInputStream(new FileInputStream(FILE_NAME), cipher));
 			this.keys = (HashMap<String,User>) ois.readObject();
 			ois.close();
 		}
@@ -67,7 +68,7 @@ public class KeyManager {
 	private SecretKey loadKey() throws NoSuchAlgorithmException, IOException {
 		SecretKey secretKey;
 
-		File f = new File(fileKey);
+		File f = new File(FILE_KEY);
 		if(f.exists() && !f.isDirectory()) { 
 			// La chiave esiste
 			byte[] keyBytes = Files.readAllBytes(f.toPath());
@@ -98,7 +99,7 @@ public class KeyManager {
 		this.key = keyGenerator.generateKey();
 
 		// Scrivi il file della chiave
-		File f = new File(fileKey);
+		File f = new File(FILE_KEY);
 		f.getParentFile().mkdirs();
 		FileOutputStream fos = new FileOutputStream(f);
 		fos.write(this.key.getEncoded());
@@ -108,18 +109,18 @@ public class KeyManager {
 		// cifra il file delle chiavi
 		this.cipher.init(Cipher.ENCRYPT_MODE, key);
 		ObjectOutputStream oss;
-		oss = new ObjectOutputStream(new CipherOutputStream(new FileOutputStream(fileName), cipher));
+		oss = new ObjectOutputStream(new CipherOutputStream(new FileOutputStream(FILE_NAME), cipher));
 		oss.writeObject(keys);
 		oss.close();		
 	}
 
-	public void newUser(String newID, int keylength) throws IOException, InvalidKeyException {
+	public void newUser(String newID, int keylength, String modPadding) throws IOException, InvalidKeyException {
 		// Genera chiavi RSA
 		KeyPair pairRSA;
 
 		this.keyGenRSA.initialize(keylength);
 		pairRSA = this.keyGenRSA.generateKeyPair();
-		keys.put(newID, new User(newID, pairRSA.getPublic(), pairRSA.getPrivate(), newID, newID));
+		keys.put(newID, new User(newID, pairRSA.getPublic(), pairRSA.getPrivate(), modPadding, newID, newID));
 		
 		// Genera chiavi FIRMA
 		// ...
@@ -127,7 +128,7 @@ public class KeyManager {
 		// aggiungi al file	
 		this.cipher.init(Cipher.ENCRYPT_MODE, key);
 		ObjectOutputStream oss;
-		oss = new ObjectOutputStream(new CipherOutputStream(new FileOutputStream(fileName), cipher));
+		oss = new ObjectOutputStream(new CipherOutputStream(new FileOutputStream(FILE_NAME), cipher));
 		oss.writeObject(keys);
 		oss.close();
 	}
@@ -138,7 +139,7 @@ public class KeyManager {
 		// Aggiorna il file delle chiavi	
 		this.cipher.init(Cipher.ENCRYPT_MODE, key);
 		ObjectOutputStream oss;
-		oss = new ObjectOutputStream(new CipherOutputStream(new FileOutputStream(fileName), cipher));
+		oss = new ObjectOutputStream(new CipherOutputStream(new FileOutputStream(FILE_NAME), cipher));
 		oss.writeObject(keys);
 		oss.close();
 
@@ -150,6 +151,10 @@ public class KeyManager {
 
 	public PublicKey getPublicKeyCod(String userID) {
 		return keys.get(userID).getPubKeyCod();
+	}
+	
+	public String getModPadding(String userID) {
+		return keys.get(userID).getmodPadding();
 	}
 
 	// AGGIUNGI GET CHIAVE DI VERIFICA

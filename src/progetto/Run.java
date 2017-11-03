@@ -15,8 +15,8 @@ public class Run {
 			
 			
 			 // Aggiungi utenti
-			km.newUser("01", 2048);
-			km.newUser("02", 1024);
+			km.newUser("01", 2048, "PKCS1Padding");
+			km.newUser("02", 1024, "OAEPPadding");
 			
 			
 			

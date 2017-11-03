@@ -61,7 +61,7 @@ public class Incapsula {
 		FileOutputStream fos = new FileOutputStream(new File(PATH + "/file/" + file + ".ts"));
 
 		fos.write(Arrays.copyOf(receiver.getBytes(), 8));
-		fos.write(ByteBuffer.allocate(4).putInt(cipherInfo.length).array());
+		fos.write(ByteBuffer.allocate(4).putInt(cipherInfo.length).array());// PUO' ESSERE SUPERFLUO
 		fos.write(cipherInfo);
 		fos.write(cipherFile);
 
@@ -105,8 +105,8 @@ public class Incapsula {
 		byte plainMetaInfo[] = outputStream.toByteArray();
 
 		// Cifriamo le meta info
-		// String modPadding = km.getPadding(receiver);
-		Cipher c = Cipher.getInstance("RSA/ECB/OAEPPadding");
+		String modPadding = km.getModPadding(receiver);
+		Cipher c = Cipher.getInstance("RSA/ECB/"+modPadding);
 		PublicKey publicKey = km.getPublicKeyCod(receiver);
 		c.init(Cipher.ENCRYPT_MODE, publicKey);
 
@@ -118,6 +118,7 @@ public class Incapsula {
 
 		FileInputStream fis = new FileInputStream(new File(PATH + "/file/" + file));
 
+		// leggiamo il destinatario dai primi otto bit del messaggio
 		byte[] receiver = new byte[8];
 		fis.read(receiver);
 
@@ -195,7 +196,7 @@ public class Incapsula {
 	NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 
 		PrivateKey pk = km.getPrivateKeyCod(receiver);
-		Cipher c = Cipher.getInstance("RSA/ECB/OAEPPadding");
+		Cipher c = Cipher.getInstance("RSA/ECB/"+km.getModPadding(receiver));
 		c.init(Cipher.DECRYPT_MODE, pk);
 		return c.doFinal(cipherMetaInfo);
 
