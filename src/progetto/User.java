@@ -7,21 +7,19 @@ import java.security.PublicKey;
 
 public class User implements Serializable {
 	private String ID;
-	private int bitKeyLength;
 	private PublicKey pubKeyCod;
 	private PrivateKey privKeyCod;
 	private String modPadding; 
 	private String pubKeyVer;
 	private String privKeyVer;
 	
-	public User(String ID, int bitKeyLength,  PublicKey pubKeyCod, PrivateKey privKeyCod, String modPadding, String pubKeyVer, String privKeyVer) {
+	public User(String ID,  PublicKey pubKeyCod, PrivateKey privKeyCod, String modPadding, String pubKeyVer, String privKeyVer) {
 		this.ID = ID;
 		this.pubKeyCod = pubKeyCod;
 		this.privKeyCod = privKeyCod;
 		this.modPadding = modPadding;
 		this.pubKeyVer = pubKeyVer;
 		this.pubKeyVer = pubKeyVer;
-		this.bitKeyLength = bitKeyLength;
 	}
 
 	public String getID() {
@@ -29,12 +27,6 @@ public class User implements Serializable {
 	}
 	public void setID(String iD) {
 		ID = iD;
-	}
-	public int getbitKeyLength() {
-		return bitKeyLength;
-	}
-	public void setbitKeyLength(int bitKeyLength) {
-		this.bitKeyLength = bitKeyLength;
 	}
 	public PublicKey getPubKeyCod() {
 		return pubKeyCod;

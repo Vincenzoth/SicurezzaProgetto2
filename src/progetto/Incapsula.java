@@ -9,10 +9,12 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.spec.RSAPublicKeySpec;
 import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
@@ -131,7 +133,11 @@ public class Incapsula {
 		//byte[] length = new byte[4];
 		//fis.read(length);
 		//int len = ByteBuffer.wrap(length).getInt();
-		int len = km.getBitKeyLength(receiverID)/8;
+		
+		//ottenere lunghezza blocco di cifratura
+		KeyFactory kf = KeyFactory.getInstance("RSA");
+		RSAPublicKeySpec pub = kf.getKeySpec(km.getPublicKeyCod(receiverID), RSAPublicKeySpec.class);
+		int len = pub.getModulus().bitLength()/8;
 		
 		byte[] cipherMetaInfo = new byte[len];
 		fis.read(cipherMetaInfo);
@@ -168,7 +174,6 @@ public class Incapsula {
 
 		SecretKey secretKey = new SecretKeySpec(secretKeyArray, 0, secretKeyLength, cifrario);
 
-		
 		IvParameterSpec iv = null;
 		if(!mode.equals("ECB")) {
 			int ivLength = cifrario.equals("AES") ? 16 : 8;

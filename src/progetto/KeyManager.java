@@ -120,7 +120,7 @@ public class KeyManager {
 
 		this.keyGenRSA.initialize(keylength);
 		pairRSA = this.keyGenRSA.generateKeyPair();
-		keys.put(newID, new User(newID, keylength, pairRSA.getPublic(), pairRSA.getPrivate(), modPadding, newID, newID));
+		keys.put(newID, new User(newID, pairRSA.getPublic(), pairRSA.getPrivate(), modPadding, newID, newID));
 		
 		// Genera chiavi FIRMA
 		// ...
@@ -145,9 +145,6 @@ public class KeyManager {
 
 	}
 	
-	public int getBitKeyLength(String userID) {
-		return keys.get(userID).getbitKeyLength();
-	}
 
 	public PrivateKey getPrivateKeyCod(String userID) {
 		return keys.get(userID).getPrivKeyCod();
