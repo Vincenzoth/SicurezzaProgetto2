@@ -101,7 +101,7 @@ public class Incapsula {
 		outputStream.write(Arrays.copyOf(padding.getBytes(), 16));
 		outputStream.write(secretKey.getEncoded());
 
-		if (mode != "ECB")
+		if (!mode.equals("ECB"))
 			outputStream.write(cipher.getIV());
 
 		byte plainMetaInfo[] = outputStream.toByteArray();

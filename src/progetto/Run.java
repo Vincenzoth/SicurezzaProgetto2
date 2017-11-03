@@ -32,7 +32,7 @@ public class Run {
 						
 			
 			Incapsula incul = new Incapsula();
-			incul.initCipher("AES", "ECB", "PKCS5Padding");
+			incul.initCipher("AES", "CBC", "PKCS5Padding");
 			incul.writeCipherFile("documento.pdf", "01", "02");
 			incul.writeDecipherFile("documento.pdf.ts", "02");
 			
