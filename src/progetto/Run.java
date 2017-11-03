@@ -13,13 +13,11 @@ public class Run {
 			
 			KeyManager km = new KeyManager();
 			
-			
+			/*
 			 // Aggiungi utenti
 			km.newUser("01", 2048, "PKCS1Padding");
 			km.newUser("02", 1024, "OAEPPadding");
-			
-			
-			
+			*/
 			
 			// Rimuovi utente
 			// km.removeUser("01");
@@ -31,11 +29,10 @@ public class Run {
 			System.out.println("Chiave privata: " + privKeyCod);
 			System.out.println("Chiave pubblica: " + pubKeyCod);
 			System.out.println();
-			
-			
+						
 			
 			Incapsula incul = new Incapsula();
-			incul.initCipher("DES", "CBC", "PKCS5Padding");
+			incul.initCipher("DESede", "ECB", "PKCS5Padding");
 			incul.writeCipherFile("documento.pdf", "01", "02");
 			incul.writeDecipherFile("documento.pdf.ts", "02");
 			

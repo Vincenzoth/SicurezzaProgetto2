@@ -61,7 +61,7 @@ public class Incapsula {
 		FileOutputStream fos = new FileOutputStream(new File(PATH + "/file/" + file + ".ts"));
 
 		fos.write(Arrays.copyOf(receiver.getBytes(), 8));
-		fos.write(ByteBuffer.allocate(4).putInt(cipherInfo.length).array());// PUO' ESSERE SUPERFLUO
+		//fos.write(ByteBuffer.allocate(4).putInt(cipherInfo.length).array());// PUO' ESSERE SUPERFLUO
 		fos.write(cipherInfo);
 		fos.write(cipherFile);
 
@@ -128,14 +128,17 @@ public class Incapsula {
 		}
 
 		// POSSO FARNE A MENO, DIPENDONO DA RSA 1024 = 128 || 2048 =256
-		byte[] length = new byte[4];
-		fis.read(length);
-		int len = ByteBuffer.wrap(length).getInt();
-
+		//byte[] length = new byte[4];
+		//fis.read(length);
+		//int len = ByteBuffer.wrap(length).getInt();
+		int len = km.getBitKeyLength(receiverID)/8;
+		
 		byte[] cipherMetaInfo = new byte[len];
 		fis.read(cipherMetaInfo);
-
+		
+		// decifra le informazioni sul cifrario utilizzato
 		byte[] depicherMetaInfo = decipherInfo(cipherMetaInfo, receiverID);
+		
 		String sender = new String(depicherMetaInfo, 0, 8).replaceAll("\0", "");
 		String cifrario = new String(depicherMetaInfo, 8, 8).replaceAll("\0", "");
 		String mode = new String(depicherMetaInfo, 16, 8).replaceAll("\0", "");
@@ -165,17 +168,21 @@ public class Incapsula {
 
 		SecretKey secretKey = new SecretKeySpec(secretKeyArray, 0, secretKeyLength, cifrario);
 
+		
 		IvParameterSpec iv = null;
-		if(mode!="ECB") {
+		if(!mode.equals("ECB")) {
 			int ivLength = cifrario.equals("AES") ? 16 : 8;
 			byte[] ivBytes = new byte[ivLength];		
 			//fis.read(ivBytes);
 			ivBytes = Arrays.copyOfRange(depicherMetaInfo, 40 + secretKeyLength, 40 + secretKeyLength + ivLength);
 			iv = new IvParameterSpec(ivBytes);
+		
 		}
-
+		
 		initCipher(cifrario, mode, padding);
 		cipher.init(Cipher.DECRYPT_MODE, secretKey, iv);
+
+		
 
 		FileOutputStream fos = new FileOutputStream(new File(PATH + "/file/DEC_" + file.substring(0, file.length() - 3)));
 		CipherInputStream cis = new CipherInputStream(fis, cipher);
