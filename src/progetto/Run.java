@@ -35,10 +35,10 @@ public class Run {
 			
 			
 			Incapsula incul = new Incapsula();
-			incul.initCipher("DES", "CFB", "PKCS5Padding");
+			incul.initCipher("DES", "CBC", "PKCS5Padding");
 			//"01","02",, "/file/documento.pdf"
-			incul.writeFile("documento.pdf", "01", "02");
-			//incul.decipherFile();
+			incul.writeCipherFile("documento.pdf", "01", "02");
+			incul.writeDecipherFile("documento.pdf.ts", "02");
 			
 
 		} catch (Exception e) {
