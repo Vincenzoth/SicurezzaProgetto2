@@ -17,8 +17,12 @@ public class Run {
 			 // Aggiungi utenti
 			km.newUser("01", 2048, "PKCS1Padding");
 			km.newUser("02", 1024, "OAEPPadding");
+			km.newUser("03", 1024, "OAEPPadding");
+			km.newUser("04", 1024, "PKCS1Padding");
+			km.newUser("05", 2048, "OAEPPadding");
 			*/
-			
+			km.newUser("04", 1024, "PKCS1Padding");
+			km.newUser("05", 2048, "OAEPPadding");
 			// Rimuovi utente
 			// km.removeUser("01");
 			
@@ -32,9 +36,9 @@ public class Run {
 						
 			
 			Incapsula incul = new Incapsula();
-			incul.initCipher("DES", "CBC", "PKCS5Padding");
-			incul.writeCipherFile("documento.pdf", "01", "02");
-			incul.writeDecipherFile("documento.pdf.ts", "02");
+			incul.initCipher("DESede", "ECB", "PKCS5Padding");
+			incul.writeCipherFile("documento.pdf", "01", "05");
+			incul.writeDecipherFile("documento.pdf.ts", "05");
 			
 			System.out.println("File Criptato");
 			

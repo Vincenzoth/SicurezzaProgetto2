@@ -62,7 +62,7 @@ public class Incapsula {
 
 		FileOutputStream fos = new FileOutputStream(new File(PATH + "/file/" + file + ".ts"));
 
-		fos.write(Arrays.copyOf(receiver.getBytes(), 8));
+		//fos.write(Arrays.copyOf(receiver.getBytes(), 8)); // PUO' ESSERE INVIATO CRIPTATO
 		//fos.write(ByteBuffer.allocate(4).putInt(cipherInfo.length).array());// PUO' ESSERE SUPERFLUO
 		fos.write(cipherInfo);
 		fos.write(cipherFile);
@@ -94,7 +94,8 @@ public class Incapsula {
 		// Creiamo l'array di byte delle informazioni in chiaro
 
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
+		
+		outputStream.write(Arrays.copyOf(receiver.getBytes(), 8));
 		outputStream.write(Arrays.copyOf(sender.getBytes(), 8));
 		outputStream.write(Arrays.copyOf(cifrario.getBytes(), 8));
 		outputStream.write(Arrays.copyOf(mode.getBytes(), 8));
@@ -121,13 +122,13 @@ public class Incapsula {
 		FileInputStream fis = new FileInputStream(new File(PATH + "/file/" + file));
 
 		// leggiamo il destinatario dai primi otto bit del messaggio
-		byte[] receiver = new byte[8];
-		fis.read(receiver);
+		//byte[] receiver = new byte[8];
+		//fis.read(receiver);
 
-		if (!Arrays.equals(receiver, Arrays.copyOf(receiverID.getBytes(), 8))) {
-			fis.close();
-			throw new Exception("This message is not for you");
-		}
+		//if (!Arrays.equals(receiver, Arrays.copyOf(receiverID.getBytes(), 8))) {
+			//fis.close();
+			//throw new Exception("This message is not for you");
+		//}
 
 		// POSSO FARNE A MENO, DIPENDONO DA RSA 1024 = 128 || 2048 =256
 		//byte[] length = new byte[4];
@@ -143,15 +144,22 @@ public class Incapsula {
 		fis.read(cipherMetaInfo);
 		
 		// decifra le informazioni sul cifrario utilizzato
+		// il metodo lancia eccezione "Decryption error" se il destinatario non è quello giusto
 		byte[] depicherMetaInfo = decipherInfo(cipherMetaInfo, receiverID);
 		
-		String sender = new String(depicherMetaInfo, 0, 8).replaceAll("\0", "");
-		String cifrario = new String(depicherMetaInfo, 8, 8).replaceAll("\0", "");
-		String mode = new String(depicherMetaInfo, 16, 8).replaceAll("\0", "");
-		String padding = new String(depicherMetaInfo, 24, 16).replaceAll("\0", "");
+		String receiver = new String(depicherMetaInfo, 0, 8).replaceAll("\0", "");
+		
+		if (! receiver.equals(receiverID) ){
+			fis.close();
+			throw new Exception("This message is not for you");
+		}
+		
+		String sender = new String(depicherMetaInfo, 8, 8).replaceAll("\0", "");
+		String cifrario = new String(depicherMetaInfo, 16, 8).replaceAll("\0", "");
+		String mode = new String(depicherMetaInfo, 24, 8).replaceAll("\0", "");
+		String padding = new String(depicherMetaInfo, 32, 16).replaceAll("\0", "");
 
 		int secretKeyLength;
-
 		switch(cifrario) {
 		case "DES":
 			secretKeyLength = 8;
@@ -167,10 +175,9 @@ public class Incapsula {
 			throw new Exception("This cipher is not for you");
 		}
 
-		// ECCO L'ERRORE, NON DEVO LEGGERE DALLINPUT STREAM !!!!!
+
 		byte[] secretKeyArray = new byte[secretKeyLength];
-		//fis.read(secretKeyArray);
-		secretKeyArray = Arrays.copyOfRange(depicherMetaInfo, 40, 40 + secretKeyLength );
+		secretKeyArray = Arrays.copyOfRange(depicherMetaInfo, 48, 48 + secretKeyLength );
 
 		SecretKey secretKey = new SecretKeySpec(secretKeyArray, 0, secretKeyLength, cifrario);
 
@@ -178,8 +185,7 @@ public class Incapsula {
 		if(!mode.equals("ECB")) {
 			int ivLength = cifrario.equals("AES") ? 16 : 8;
 			byte[] ivBytes = new byte[ivLength];		
-			//fis.read(ivBytes);
-			ivBytes = Arrays.copyOfRange(depicherMetaInfo, 40 + secretKeyLength, 40 + secretKeyLength + ivLength);
+			ivBytes = Arrays.copyOfRange(depicherMetaInfo, 48 + secretKeyLength, 48 + secretKeyLength + ivLength);
 			iv = new IvParameterSpec(ivBytes);
 		
 		}
