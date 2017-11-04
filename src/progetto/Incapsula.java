@@ -121,20 +121,20 @@ public class Incapsula {
 
 		FileInputStream fis = new FileInputStream(new File(PATH + "/file/" + file));
 
-		// leggiamo il destinatario dai primi otto bit del messaggio
-		//byte[] receiver = new byte[8];
-		//fis.read(receiver);
-
-		//if (!Arrays.equals(receiver, Arrays.copyOf(receiverID.getBytes(), 8))) {
-			//fis.close();
-			//throw new Exception("This message is not for you");
-		//}
-
-		// POSSO FARNE A MENO, DIPENDONO DA RSA 1024 = 128 || 2048 =256
-		//byte[] length = new byte[4];
-		//fis.read(length);
-		//int len = ByteBuffer.wrap(length).getInt();
-		
+			// leggiamo il destinatario dai primi otto bit del messaggio
+			//byte[] receiver = new byte[8];
+			//fis.read(receiver);
+	
+			//if (!Arrays.equals(receiver, Arrays.copyOf(receiverID.getBytes(), 8))) {
+				//fis.close();
+				//throw new Exception("This message is not for you");
+			//}
+	
+			// POSSO FARNE A MENO, DIPENDONO DA RSA 1024 = 128 || 2048 =256
+			//byte[] length = new byte[4];
+			//fis.read(length);
+			//int len = ByteBuffer.wrap(length).getInt();
+			
 		//ottenere lunghezza blocco di cifratura
 		KeyFactory kf = KeyFactory.getInstance("RSA");
 		RSAPublicKeySpec pub = kf.getKeySpec(km.getPublicKeyCod(receiverID), RSAPublicKeySpec.class);

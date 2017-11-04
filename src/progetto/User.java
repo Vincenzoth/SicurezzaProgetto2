@@ -10,16 +10,20 @@ public class User implements Serializable {
 	private PublicKey pubKeyCod;
 	private PrivateKey privKeyCod;
 	private String modPadding; 
-	private String pubKeyVer;
-	private String privKeyVer;
 	
-	public User(String ID,  PublicKey pubKeyCod, PrivateKey privKeyCod, String modPadding, String pubKeyVer, String privKeyVer) {
+	private PublicKey pubKeyVer;
+	private PrivateKey privKeyVer;
+	private String sigType;
+	
+	
+	public User(String ID,  PublicKey pubKeyCod, PrivateKey privKeyCod, String modPadding, PublicKey pubKeyVer, PrivateKey privKeyVer, String sigType) {
 		this.ID = ID;
 		this.pubKeyCod = pubKeyCod;
 		this.privKeyCod = privKeyCod;
 		this.modPadding = modPadding;
 		this.pubKeyVer = pubKeyVer;
 		this.pubKeyVer = pubKeyVer;
+		this.sigType = sigType;
 	}
 
 	public String getID() {
@@ -46,16 +50,22 @@ public class User implements Serializable {
 	public void setModPadding(String modPadding) {
 		this.modPadding = modPadding;
 	}
-	public String getPubKeyVer() {
+	public PublicKey getPubKeyVer() {
 		return pubKeyVer;
 	}
-	public void setPubKeyVer(String pubKeyVer) {
+	public void setPubKeyVer(PublicKey pubKeyVer) {
 		this.pubKeyVer = pubKeyVer;
 	}
-	public String getPrivKeyVer() {
+	public PrivateKey getPrivKeyVer() {
 		return privKeyVer;
 	}
-	public void setPrivKeyVer(String privKeyVer) {
+	public void setPrivKeyVer(PrivateKey privKeyVer) {
 		this.privKeyVer = privKeyVer;
+	}
+	public String getSigType() {
+		return sigType;
+	}
+	public void setSigType(String sigType) {
+		this.sigType = sigType;
 	}
 }

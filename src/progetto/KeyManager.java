@@ -33,6 +33,7 @@ public class KeyManager {
 	final static String FILE_KEY = PATH + "/data/keyOfkeys";
 	
 	private KeyPairGenerator keyGenRSA;
+	private KeyPairGenerator keyGenSig;
 	private Cipher cipher;
 	private SecretKey key;
 	private HashMap<String,User> keys;
@@ -43,7 +44,8 @@ public class KeyManager {
 		key = loadKey();
 
 		// inizializza generatore chiavi
-		this.keyGenRSA = KeyPairGenerator.getInstance("RSA");
+		//this.keyGenRSA = KeyPairGenerator.getInstance("RSA");
+		
 		
 		// inizializza mappa
 		keys = new HashMap<String,User>();
@@ -114,16 +116,19 @@ public class KeyManager {
 		oss.close();		
 	}
 
-	public void newUser(String newID, int keylength, String modPadding) throws IOException, InvalidKeyException {
+	public void newUser(String newID, int keylengthRSA, String modPadding, int keyLengthSig, String sigType) throws IOException, InvalidKeyException, NoSuchAlgorithmException {
 		// Genera chiavi RSA
-		KeyPair pairRSA;
-
-		this.keyGenRSA.initialize(keylength);
-		pairRSA = this.keyGenRSA.generateKeyPair();
-		keys.put(newID, new User(newID, pairRSA.getPublic(), pairRSA.getPrivate(), modPadding, newID, newID));
+		this.keyGenRSA = KeyPairGenerator.getInstance("RSA");
+		this.keyGenRSA.initialize(keylengthRSA);
+		KeyPair pairRSA = this.keyGenRSA.generateKeyPair();
 		
-		// Genera chiavi FIRMA
-		// ...
+		// Genera chiavi firma DSA
+		this.keyGenRSA = KeyPairGenerator.getInstance("DSA");
+		this.keyGenRSA.initialize(keyLengthSig);
+		KeyPair pairDSA = this.keyGenRSA.generateKeyPair();
+
+		// aggiungi alla mappa
+		keys.put(newID, new User(newID, pairRSA.getPublic(), pairRSA.getPrivate(), modPadding, pairDSA.getPublic(), pairDSA.getPrivate(), sigType));
 
 		// aggiungi al file	
 		this.cipher.init(Cipher.ENCRYPT_MODE, key);
@@ -157,7 +162,17 @@ public class KeyManager {
 	public String getModPadding(String userID) {
 		return keys.get(userID).getmodPadding();
 	}
+	
+	public PrivateKey getPrivateKeyVer(String userID) {
+		return keys.get(userID).getPrivKeyVer();
+	}
 
-	// AGGIUNGI GET CHIAVE DI VERIFICA
+	public PublicKey getPublicKeyVer(String userID) {
+		return keys.get(userID).getPubKeyVer();
+	}
+	
+	public String getSigType(String userID) {
+		return keys.get(userID).getSigType();
+	}
 
 }
