@@ -62,11 +62,9 @@ public class KeyManager {
 			this.cipher.init(Cipher.DECRYPT_MODE, key);
 
 			ObjectInputStream ois;
-			CipherInputStream cis = new CipherInputStream(new FileInputStream(FILE_NAME), cipher);
-			ois = new ObjectInputStream(cis);
+			ois = new ObjectInputStream(new CipherInputStream(new FileInputStream(FILE_NAME), cipher));
 			this.keys = (HashMap<String,User>) ois.readObject();
 			ois.close();
-			cis.close();
 		}
 	}
 

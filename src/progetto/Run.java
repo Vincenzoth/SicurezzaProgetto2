@@ -26,7 +26,7 @@ public class Run {
 						
 			// Rimuovi utente
 			// km.removeUser("01");
-
+			
 			
 			//PrivateKey privKeyCod = km.getPrivateKeyCod("02");
 			//PublicKey pubKeyCod = km.getPublicKeyCod("02");
