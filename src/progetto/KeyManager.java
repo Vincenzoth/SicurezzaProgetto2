@@ -26,6 +26,8 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.DESKeySpec;
+import javax.crypto.spec.DESedeKeySpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -70,14 +72,16 @@ public class KeyManager {
 
 	private SecretKey loadKey() throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {		
 		SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-
+		 byte[] salt = new byte[] { 0x7d, 0x60, 0x43, 0x5f, 0x02, (byte) 0xe9, (byte) 0xe0, (byte) 0xae };
+		
 		// Specifica della chiave
-		KeySpec keySpec = new PBEKeySpec(password, password.toString().getBytes(), 65536, 192);
-
+		//KeySpec keySpec = new PBEKeySpec(password, password.toString().getBytes(), 65536, 192);
+		KeySpec keySpec = new PBEKeySpec(password, salt, 65536, 192);
+		
 		// Genera una chiave generica
 		SecretKey tmp = factory.generateSecret(keySpec);
 
-		// Genera una chiave AES
+		// Genera una chiave DESede
 		SecretKey secretKey = new SecretKeySpec(tmp.getEncoded(), "DESede");
 
 		return secretKey;

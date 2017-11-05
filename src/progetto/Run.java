@@ -23,7 +23,11 @@ public class Run {
 			km.newUser("05", 2048, "OAEPPadding", 2048, "SHA256withDSA");
 			km.newUser("06", 2048, "OAEPPadding", 2048, "SHA1withDSA");//ERRORE
 			*/		
-						
+			km.newUser("01", 2048, "PKCS1Padding", 1024, "SHA256withDSA");
+			km.newUser("02", 1024, "OAEPPadding", 1024, "SHA224withDSA");
+			km.newUser("03", 1024, "OAEPPadding", 1024, "SHA1withDSA");
+			km.newUser("04", 1024, "PKCS1Padding", 2048, "SHA224withDSA");
+			km.newUser("05", 2048, "OAEPPadding", 2048, "SHA256withDSA");
 			// Rimuovi utente
 			// km.removeUser("01");
 			
@@ -42,10 +46,10 @@ public class Run {
 			boolean sig = true;
 			Incapsula incul = new Incapsula(km);
 			incul.initCipher("DESede", "CBC", "PKCS5Padding");
-			incul.writeCipherFile("documento.pdf", "05", "05", sig);		
+			incul.writeCipherFile("documento.pdf", "02", "01", sig);		
 			System.out.println("File Criptato");
 			
-			boolean isVer = incul.writeDecipherFile("documento.pdf.ts", "05");
+			boolean isVer = incul.writeDecipherFile("documento.pdf.ts", "01");
 			System.out.println("File decriptato");
 			
 			if(sig) {
