@@ -6,6 +6,9 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 
 public class User implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+	
 	private String ID;
 	private PublicKey pubKeyCod;
 	private PrivateKey privKeyCod;
