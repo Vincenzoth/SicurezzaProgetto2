@@ -1,10 +1,14 @@
 package gui;
 
 import java.awt.EventQueue;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
 import java.awt.BorderLayout;
+import java.awt.Color;
+
 import javax.swing.JTabbedPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -27,10 +31,13 @@ public class Gui {
 	private JTextField textField;
 	private JTextField textField_1;
 	private JTextField textField_2;
+	private JFileChooser fileCh1; 
 	private JTextField textField_3;
 	private JTextField ReceiverID;
 	private JTextField idRemoveUserTextField;
 	private JTextField idNewUserTextField;
+	
+	private Browse1_list browse1_listener;
 
 	/**
 	 * Launch the application.
@@ -78,9 +85,14 @@ public class Gui {
 		textField_2 = new JTextField();
 		ChiperPanel.add(textField_2, "cell 1 0 6 1,growx");
 		textField_2.setColumns(10);
+		textField_2.setEditable(false);
+		textField_2.setBackground(Color.white);
+		fileCh1 = new JFileChooser();
 		
-		JButton FileChooserLabel = new JButton("load");
+		JButton FileChooserLabel = new JButton("Browse...");
 		ChiperPanel.add(FileChooserLabel, "cell 7 0,alignx center");
+		browse1_listener = new Browse1_list();
+		FileChooserLabel.addActionListener(browse1_listener);
 		
 		JLabel IdSenderLabel = new JLabel("ID Sender");
 		ChiperPanel.add(IdSenderLabel, "cell 0 1,alignx left");
@@ -215,5 +227,12 @@ public class Gui {
 		JButton removeUserButton = new JButton("Remove");
 		removeUserPanel.add(removeUserButton, "cell 4 1,alignx left,aligny top");
 	}
+	
+	private class Browse1_list implements ActionListener {
+        public void actionPerformed(ActionEvent evt) {
+        	fileCh1.showOpenDialog(null);
+        	textField_2.setText(fileCh1.getSelectedFile().getPath());
+        }
+}
 
 }
