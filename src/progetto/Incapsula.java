@@ -8,12 +8,16 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Arrays;
 
@@ -30,12 +34,14 @@ import javax.crypto.spec.SecretKeySpec;
 public class Incapsula {
 
 	final static String PATH = Paths.get(System.getProperty("user.dir")).toString();
+	final static int LENGTH_METAINFO_BASE = 49;
 
 	private String cifrario;
 	private String mode;
 	private String padding;
 
 	private Cipher cipher;
+	private Signature sig;
 	private KeyManager km;
 
 	public Incapsula() throws InvalidKeyException, NoSuchAlgorithmException, ClassNotFoundException, IOException, NoSuchPaddingException {
@@ -53,18 +59,35 @@ public class Incapsula {
 		cipher = Cipher.getInstance(cifrario + "/" + mode + "/" + padding);		
 	}
 
-	public void writeCipherFile(String file, String sender, String receiver) throws IllegalBlockSizeException,
-	BadPaddingException, IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException {
-
+	public void writeCipherFile(String file, String sender, String receiver, boolean signature) throws IllegalBlockSizeException,
+	BadPaddingException, IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, SignatureException {
+		
+		// Cifra il messaggio
 		SecretKey secretKey = genSecretKey();
 		byte[] cipherFile = cipherFile(secretKey, file);
-		byte[] cipherInfo = cipherInfo(secretKey, sender, receiver);
+		
+		// firma se richiesto
+		byte[] signatureBytes = null;
+		int sigLength = 0;
+		if (signature) {		
+			sig = Signature.getInstance(km.getSigType(sender));
+			sig.initSign(km.getPrivateKeyVer(sender));
+			// Trasmissione dell'engine
+			sig.update(Files.readAllBytes(Paths.get(PATH + "/file/" + file)));
+			// Generazione della firma digitale
+			signatureBytes = sig.sign();
+			
+			sigLength = signatureBytes.length;
+		}
+		
+		// cifra meta informazioni
+		byte[] cipherInfo = cipherInfo(secretKey, sender, receiver, signature, sigLength);
 
+		// scrivi il file
 		FileOutputStream fos = new FileOutputStream(new File(PATH + "/file/" + file + ".ts"));
-
-		//fos.write(Arrays.copyOf(receiver.getBytes(), 8)); // PUO' ESSERE INVIATO CRIPTATO
-		//fos.write(ByteBuffer.allocate(4).putInt(cipherInfo.length).array());// PUO' ESSERE SUPERFLUO
 		fos.write(cipherInfo);
+		if (signature)
+			fos.write(signatureBytes);
 		fos.write(cipherFile);
 
 		fos.close();
@@ -87,7 +110,7 @@ public class Incapsula {
 
 	}
 
-	private byte[] cipherInfo(SecretKey secretKey, String sender, String receiver)
+	private byte[] cipherInfo(SecretKey secretKey, String sender, String receiver, boolean signature, int sigLength)
 			throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
 			IllegalBlockSizeException, BadPaddingException {
 
@@ -100,6 +123,8 @@ public class Incapsula {
 		outputStream.write(Arrays.copyOf(cifrario.getBytes(), 8));
 		outputStream.write(Arrays.copyOf(mode.getBytes(), 8));
 		outputStream.write(Arrays.copyOf(padding.getBytes(), 16));
+		outputStream.write(ByteBuffer.allocate(1).put((signature) ? (byte)1 : (byte)0).array());		
+		
 		outputStream.write(secretKey.getEncoded());
 
 		if (!mode.equals("ECB"))
@@ -117,24 +142,11 @@ public class Incapsula {
 
 	}
 
-	public void writeDecipherFile(String file, String receiverID) throws Exception {
+	public boolean writeDecipherFile(String file, String receiverID) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, MyException, InvalidAlgorithmParameterException, SignatureException {
+		boolean isValid = true; 
 
 		FileInputStream fis = new FileInputStream(new File(PATH + "/file/" + file));
-
-			// leggiamo il destinatario dai primi otto bit del messaggio
-			//byte[] receiver = new byte[8];
-			//fis.read(receiver);
 	
-			//if (!Arrays.equals(receiver, Arrays.copyOf(receiverID.getBytes(), 8))) {
-				//fis.close();
-				//throw new Exception("This message is not for you");
-			//}
-	
-			// POSSO FARNE A MENO, DIPENDONO DA RSA 1024 = 128 || 2048 =256
-			//byte[] length = new byte[4];
-			//fis.read(length);
-			//int len = ByteBuffer.wrap(length).getInt();
-			
 		//ottenere lunghezza blocco di cifratura
 		KeyFactory kf = KeyFactory.getInstance("RSA");
 		RSAPublicKeySpec pub = kf.getKeySpec(km.getPublicKeyCod(receiverID), RSAPublicKeySpec.class);
@@ -151,13 +163,14 @@ public class Incapsula {
 		
 		if (! receiver.equals(receiverID) ){
 			fis.close();
-			throw new Exception("This message is not for you");
+			throw new MyException("This message is not for you");
 		}
 		
 		String sender = new String(depicherMetaInfo, 8, 8).replaceAll("\0", "");
 		String cifrario = new String(depicherMetaInfo, 16, 8).replaceAll("\0", "");
 		String mode = new String(depicherMetaInfo, 24, 8).replaceAll("\0", "");
 		String padding = new String(depicherMetaInfo, 32, 16).replaceAll("\0", "");
+		boolean signature = ByteBuffer.wrap(Arrays.copyOfRange(depicherMetaInfo, 48, 49)).get(0) == 1 ? true : false;
 
 		int secretKeyLength;
 		switch(cifrario) {
@@ -172,12 +185,12 @@ public class Incapsula {
 			break;
 		default:
 			fis.close();
-			throw new Exception("This cipher is not for you");
+			throw new MyException("This cipher is not for you");
 		}
 
 
 		byte[] secretKeyArray = new byte[secretKeyLength];
-		secretKeyArray = Arrays.copyOfRange(depicherMetaInfo, 48, 48 + secretKeyLength );
+		secretKeyArray = Arrays.copyOfRange(depicherMetaInfo, LENGTH_METAINFO_BASE, LENGTH_METAINFO_BASE + secretKeyLength );
 
 		SecretKey secretKey = new SecretKeySpec(secretKeyArray, 0, secretKeyLength, cifrario);
 
@@ -185,11 +198,29 @@ public class Incapsula {
 		if(!mode.equals("ECB")) {
 			int ivLength = cifrario.equals("AES") ? 16 : 8;
 			byte[] ivBytes = new byte[ivLength];		
-			ivBytes = Arrays.copyOfRange(depicherMetaInfo, 48 + secretKeyLength, 48 + secretKeyLength + ivLength);
+			ivBytes = Arrays.copyOfRange(depicherMetaInfo, LENGTH_METAINFO_BASE + secretKeyLength, LENGTH_METAINFO_BASE + secretKeyLength + ivLength);
 			iv = new IvParameterSpec(ivBytes);
 		
 		}
 		
+		// leggi la firma
+		byte[] bytesSig = null;
+		if(signature) {
+			byte[] firtBytesSig = new byte[2];
+			fis.read(firtBytesSig);
+			
+			int remainingByte = firtBytesSig[1];
+			
+			byte[] otherBytesSig = new byte[remainingByte];
+			fis.read(otherBytesSig);
+			
+			bytesSig = new byte[2 + remainingByte];
+			System.arraycopy(firtBytesSig, 0, bytesSig, 0, 2);
+			System.arraycopy(otherBytesSig, 0, bytesSig, 2, remainingByte);	
+		}
+		
+		
+		// decifra messaggio
 		initCipher(cifrario, mode, padding);
 		cipher.init(Cipher.DECRYPT_MODE, secretKey, iv);
 
@@ -207,7 +238,17 @@ public class Incapsula {
 		fis.close();
 		fos.close();
 		cis.close();
+		
+		// controlla firma
+		if (signature) {
+			byte[] message = Files.readAllBytes(Paths.get(PATH + "/file/DEC_" + file.substring(0, file.length() - 3)));
 
+			// Verifica della firma
+			isValid = verifySignature(bytesSig, message, sender);			
+		}
+		
+		return isValid;
+		
 	}
 
 	private byte[] decipherInfo(byte[] cipherMetaInfo, String receiver) throws NoSuchAlgorithmException,
@@ -217,6 +258,24 @@ public class Incapsula {
 		Cipher c = Cipher.getInstance("RSA/ECB/"+km.getModPadding(receiver));
 		c.init(Cipher.DECRYPT_MODE, pk);
 		return c.doFinal(cipherMetaInfo);
+
+	}
+	
+	public Boolean verifySignature(byte[] signatureBytes, byte[] data, String sender) throws InvalidKeyException, SignatureException, NoSuchAlgorithmException {
+		// inizializza firma
+		sig = Signature.getInstance(km.getSigType(sender));
+		
+		// Verifica della firma
+		Boolean verified;
+		sig.initVerify(km.getPublicKeyVer(sender));
+		sig.update(data);
+		
+		try {
+			verified = sig.verify(signatureBytes);
+		} catch (SignatureException e) {
+			verified = false;
+		}
+		return verified;
 
 	}
 

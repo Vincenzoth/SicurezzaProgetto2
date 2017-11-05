@@ -46,7 +46,6 @@ public class KeyManager {
 		// inizializza generatore chiavi
 		//this.keyGenRSA = KeyPairGenerator.getInstance("RSA");
 		
-		
 		// inizializza mappa
 		keys = new HashMap<String,User>();
 
@@ -116,16 +115,19 @@ public class KeyManager {
 		oss.close();		
 	}
 
-	public void newUser(String newID, int keylengthRSA, String modPadding, int keyLengthSig, String sigType) throws IOException, InvalidKeyException, NoSuchAlgorithmException {
+	public void newUser(String newID, int keylengthRSA, String modPadding, int keyLengthSig, String sigType) throws IOException, InvalidKeyException, NoSuchAlgorithmException, MyException {
+		if(sigType.equals("SHA1withDSA") && keyLengthSig == 2048 )
+			throw new MyException("User "+newID+" Is not possible use SHA1withDSA with 2048 key!");
+		
 		// Genera chiavi RSA
 		this.keyGenRSA = KeyPairGenerator.getInstance("RSA");
-		this.keyGenRSA.initialize(keylengthRSA);
+		this.keyGenRSA.initialize(keylengthRSA, new SecureRandom());
 		KeyPair pairRSA = this.keyGenRSA.generateKeyPair();
 		
 		// Genera chiavi firma DSA
-		this.keyGenRSA = KeyPairGenerator.getInstance("DSA");
-		this.keyGenRSA.initialize(keyLengthSig);
-		KeyPair pairDSA = this.keyGenRSA.generateKeyPair();
+		this.keyGenSig = KeyPairGenerator.getInstance("DSA");
+		this.keyGenSig.initialize(keyLengthSig, new SecureRandom());
+		KeyPair pairDSA = this.keyGenSig.generateKeyPair();
 
 		// aggiungi alla mappa
 		keys.put(newID, new User(newID, pairRSA.getPublic(), pairRSA.getPrivate(), modPadding, pairDSA.getPublic(), pairDSA.getPrivate(), sigType));

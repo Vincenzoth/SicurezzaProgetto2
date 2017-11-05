@@ -22,7 +22,7 @@ public class User implements Serializable {
 		this.privKeyCod = privKeyCod;
 		this.modPadding = modPadding;
 		this.pubKeyVer = pubKeyVer;
-		this.pubKeyVer = pubKeyVer;
+		this.privKeyVer = privKeyVer;
 		this.sigType = sigType;
 	}
 
