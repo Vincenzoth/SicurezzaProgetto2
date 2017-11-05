@@ -8,7 +8,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -17,19 +16,22 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 import java.util.HashMap;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
-import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class KeyManager {
 	final static String PATH = Paths.get(System.getProperty("user.dir")).toString();
-	final static String FILE_NAME = PATH + "/data/key";
+	final static String FILE_NAME = PATH + "/data/keys";
 	final static String FILE_KEY = PATH + "/data/keyOfkeys";
 	
 	private KeyPairGenerator keyGenRSA;
@@ -37,15 +39,15 @@ public class KeyManager {
 	private Cipher cipher;
 	private SecretKey key;
 	private HashMap<String,User> keys;
+	private char[] password;
 
-	public KeyManager() throws NoSuchAlgorithmException, NoSuchPaddingException, IOException, InvalidKeyException, ClassNotFoundException {
+	public KeyManager(String password) throws NoSuchAlgorithmException, NoSuchPaddingException, IOException, InvalidKeyException, ClassNotFoundException, InvalidKeySpecException {
 		// inizializza cifrario
 		this.cipher = Cipher.getInstance("DESede/ECB/PKCS5Padding");
+		// genera la chiave
+		this.password = password.toCharArray();
 		key = loadKey();
 
-		// inizializza generatore chiavi
-		//this.keyGenRSA = KeyPairGenerator.getInstance("RSA");
-		
 		// inizializza mappa
 		keys = new HashMap<String,User>();
 
@@ -60,52 +62,34 @@ public class KeyManager {
 			this.cipher.init(Cipher.DECRYPT_MODE, key);
 
 			ObjectInputStream ois;
-			ois = new ObjectInputStream(new CipherInputStream(new FileInputStream(FILE_NAME), cipher));
+			CipherInputStream cis = new CipherInputStream(new FileInputStream(FILE_NAME), cipher);
+			ois = new ObjectInputStream(cis);
 			this.keys = (HashMap<String,User>) ois.readObject();
 			ois.close();
+			cis.close();
 		}
 	}
 
-	private SecretKey loadKey() throws NoSuchAlgorithmException, IOException {
-		SecretKey secretKey;
+	private SecretKey loadKey() throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {		
+		SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
 
-		File f = new File(FILE_KEY);
-		if(f.exists() && !f.isDirectory()) { 
-			// La chiave esiste
-			byte[] keyBytes = Files.readAllBytes(f.toPath());
-			secretKey = new SecretKeySpec(keyBytes, "DESede");
+		// Specifica della chiave
+		KeySpec keySpec = new PBEKeySpec(password, password.toString().getBytes(), 65536, 192);
 
-		}else {
-			// genera una chiave
-			KeyGenerator keyGenerator = KeyGenerator.getInstance("DESede");
-			keyGenerator.init(168, new SecureRandom());
-			secretKey = keyGenerator.generateKey();
+		// Genera una chiave generica
+		SecretKey tmp = factory.generateSecret(keySpec);
 
-			// Scrivi il file
-			f.getParentFile().mkdirs();
-
-			FileOutputStream fos = new FileOutputStream(f);
-			fos.write(secretKey.getEncoded());
-			fos.flush();
-			fos.close();
-		}
+		// Genera una chiave AES
+		SecretKey secretKey = new SecretKeySpec(tmp.getEncoded(), "DESede");
 
 		return secretKey;
 	}
 	
-	public void renewKey() throws NoSuchAlgorithmException, IOException, InvalidKeyException {
+	public void renewKey(String newPassword) throws NoSuchAlgorithmException, IOException, InvalidKeyException, InvalidKeySpecException {
 		// genera una nuova chiave
-		KeyGenerator keyGenerator = KeyGenerator.getInstance("DESede");
-		keyGenerator.init(168, new SecureRandom());
-		this.key = keyGenerator.generateKey();
-
-		// Scrivi il file della chiave
-		File f = new File(FILE_KEY);
-		f.getParentFile().mkdirs();
-		FileOutputStream fos = new FileOutputStream(f);
-		fos.write(this.key.getEncoded());
-		fos.flush();
-		fos.close();
+		
+		this.password = newPassword.toCharArray();
+		this.key = loadKey();;
 		
 		// cifra il file delle chiavi
 		this.cipher.init(Cipher.ENCRYPT_MODE, key);
@@ -152,7 +136,6 @@ public class KeyManager {
 
 	}
 	
-
 	public PrivateKey getPrivateKeyCod(String userID) {
 		return keys.get(userID).getPrivKeyCod();
 	}

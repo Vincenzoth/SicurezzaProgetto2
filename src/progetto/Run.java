@@ -11,7 +11,8 @@ public class Run {
 		System.out.println("\n  -------     -------   Keymanager:");
 		try {
 			
-			KeyManager km = new KeyManager();
+			String password = "p@ssw0rd";
+			KeyManager km = new KeyManager(password);
 			
 			/*
 			 // Aggiungi utenti
@@ -21,26 +22,26 @@ public class Run {
 			km.newUser("04", 1024, "PKCS1Padding", 2048, "SHA224withDSA");
 			km.newUser("05", 2048, "OAEPPadding", 2048, "SHA256withDSA");
 			km.newUser("06", 2048, "OAEPPadding", 2048, "SHA1withDSA");//ERRORE
-			*/
-			
+			*/			
+						
 			// Rimuovi utente
 			// km.removeUser("01");
 
 			
-			PrivateKey privKeyCod = km.getPrivateKeyCod("02");
-			PublicKey pubKeyCod = km.getPublicKeyCod("02");
-			PrivateKey privKeyVer = km.getPrivateKeyVer("02");
-			PublicKey pubKeyVer = km.getPublicKeyVer("02");
+			//PrivateKey privKeyCod = km.getPrivateKeyCod("02");
+			//PublicKey pubKeyCod = km.getPublicKeyCod("02");
+			//PrivateKey privKeyVer = km.getPrivateKeyVer("02");
+			//PublicKey pubKeyVer = km.getPublicKeyVer("02");
 			
-			System.out.println("Chiave privata: " + privKeyCod);
-			System.out.println("Chiave pubblica: " + pubKeyCod);
-			System.out.println("Chiave privata ver: " + privKeyVer);
-			System.out.println("Chiave pubblica ver: " + pubKeyVer);
-			System.out.println();
+			//System.out.println("Chiave privata: " + privKeyCod);
+			//System.out.println("Chiave pubblica: " + pubKeyCod);
+			//System.out.println("Chiave privata ver: " + privKeyVer);
+			//System.out.println("Chiave pubblica ver: " + pubKeyVer);
+			//System.out.println();
 						
 			boolean sig = true;
-			Incapsula incul = new Incapsula();
-			incul.initCipher("DESede", "ECB", "PKCS5Padding");
+			Incapsula incul = new Incapsula(km);
+			incul.initCipher("DESede", "CBC", "PKCS5Padding");
 			incul.writeCipherFile("documento.pdf", "05", "02", sig);		
 			System.out.println("File Criptato");
 			

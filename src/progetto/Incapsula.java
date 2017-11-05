@@ -44,9 +44,9 @@ public class Incapsula {
 	private Signature sig;
 	private KeyManager km;
 
-	public Incapsula() throws InvalidKeyException, NoSuchAlgorithmException, ClassNotFoundException, IOException, NoSuchPaddingException {
+	public Incapsula(KeyManager km) throws InvalidKeyException, NoSuchAlgorithmException, ClassNotFoundException, IOException, NoSuchPaddingException, InvalidKeySpecException {
 
-		this.km = new KeyManager();
+		this.km = km;
 
 	}
 
