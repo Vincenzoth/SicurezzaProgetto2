@@ -76,12 +76,11 @@ public class Incapsula {
 			sig.update(Files.readAllBytes(Paths.get(PATH + "/file/" + file)));
 			// Generazione della firma digitale
 			signatureBytes = sig.sign();
-			
-			sigLength = signatureBytes.length;
+						
 		}
 		
 		// cifra meta informazioni
-		byte[] cipherInfo = cipherInfo(secretKey, sender, receiver, signature, sigLength);
+		byte[] cipherInfo = cipherInfo(secretKey, sender, receiver, signature);
 
 		// scrivi il file
 		FileOutputStream fos = new FileOutputStream(new File(PATH + "/file/" + file + ".ts"));
@@ -110,7 +109,7 @@ public class Incapsula {
 
 	}
 
-	private byte[] cipherInfo(SecretKey secretKey, String sender, String receiver, boolean signature, int sigLength)
+	private byte[] cipherInfo(SecretKey secretKey, String sender, String receiver, boolean signature)
 			throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
 			IllegalBlockSizeException, BadPaddingException {
 
