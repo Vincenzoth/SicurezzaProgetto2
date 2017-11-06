@@ -33,7 +33,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class Incapsula {
 
-	final static String PATH = Paths.get(System.getProperty("user.dir")).toString();
+	//final static String PATH = Paths.get(System.getProperty("user.dir")).toString();
 	final static int LENGTH_METAINFO_BASE = 49;
 
 	private String cifrario;
@@ -73,17 +73,18 @@ public class Incapsula {
 			sig = Signature.getInstance(km.getSigType(sender));
 			sig.initSign(km.getPrivateKeyVer(sender));
 			// Trasmissione dell'engine
-			sig.update(Files.readAllBytes(Paths.get(PATH + "/file/" + file)));
+			sig.update(Files.readAllBytes(Paths.get(file)));
 			// Generazione della firma digitale
 			signatureBytes = sig.sign();
-						
+			
+			sigLength = signatureBytes.length;
 		}
 		
 		// cifra meta informazioni
-		byte[] cipherInfo = cipherInfo(secretKey, sender, receiver, signature);
+		byte[] cipherInfo = cipherInfo(secretKey, sender, receiver, signature, sigLength);
 
 		// scrivi il file
-		FileOutputStream fos = new FileOutputStream(new File(PATH + "/file/" + file + ".ts"));
+		FileOutputStream fos = new FileOutputStream(new File(file + ".ts"));
 		fos.write(cipherInfo);
 		if (signature)
 			fos.write(signatureBytes);
@@ -105,11 +106,11 @@ public class Incapsula {
 	private byte[] cipherFile(SecretKey secretKey, String file)
 			throws IOException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
 		cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-		return cipher.doFinal(Files.readAllBytes(Paths.get(PATH + "/file/" + file)));
+		return cipher.doFinal(Files.readAllBytes(Paths.get(file)));
 
 	}
 
-	private byte[] cipherInfo(SecretKey secretKey, String sender, String receiver, boolean signature)
+	private byte[] cipherInfo(SecretKey secretKey, String sender, String receiver, boolean signature, int sigLength)
 			throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
 			IllegalBlockSizeException, BadPaddingException {
 
@@ -141,10 +142,10 @@ public class Incapsula {
 
 	}
 
-	public boolean writeDecipherFile(String file, String receiverID) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, MyException, InvalidAlgorithmParameterException, SignatureException {
-		boolean isValid = true; 
+	public int writeDecipherFile(String file, String receiverID) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, MyException, InvalidAlgorithmParameterException, SignatureException {
+		int isValid = 0; 
 
-		FileInputStream fis = new FileInputStream(new File(PATH + "/file/" + file));
+		FileInputStream fis = new FileInputStream(new File(file));
 	
 		//ottenere lunghezza blocco di cifratura
 		KeyFactory kf = KeyFactory.getInstance("RSA");
@@ -223,9 +224,11 @@ public class Incapsula {
 		initCipher(cifrario, mode, padding);
 		cipher.init(Cipher.DECRYPT_MODE, secretKey, iv);
 
-		
 
-		FileOutputStream fos = new FileOutputStream(new File(PATH + "/file/DEC_" + file.substring(0, file.length() - 3)));
+		String[] elementsOfPath = file.split("\\.");	
+		String decipherPath = elementsOfPath[0] + "_DEC." + elementsOfPath[1];
+
+		FileOutputStream fos = new FileOutputStream(new File(decipherPath));
 		CipherInputStream cis = new CipherInputStream(fis, cipher);
 
 		byte[] buffer = new byte[512];
@@ -240,10 +243,10 @@ public class Incapsula {
 		
 		// controlla firma
 		if (signature) {
-			byte[] message = Files.readAllBytes(Paths.get(PATH + "/file/DEC_" + file.substring(0, file.length() - 3)));
+			byte[] message = Files.readAllBytes(Paths.get(decipherPath));
 
 			// Verifica della firma
-			isValid = verifySignature(bytesSig, message, sender);			
+			isValid = verifySignature(bytesSig, message, sender) ? 1 : -1;			
 		}
 		
 		return isValid;

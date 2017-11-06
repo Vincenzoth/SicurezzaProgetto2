@@ -102,8 +102,8 @@ public class KeyManager {
 	}
 
 	public void newUser(String newID, int keylengthRSA, String modPadding, int keyLengthSig, String sigType) throws IOException, InvalidKeyException, NoSuchAlgorithmException, MyException {
-		if(sigType.equals("SHA1withDSA") && keyLengthSig == 2048 )
-			throw new MyException("User "+newID+" Is not possible use SHA1withDSA with 2048 key!");
+		//if(sigType.equals("SHA1withDSA") && keyLengthSig == 2048 )
+			//throw new MyException("User "+newID+" Is not possible use SHA1withDSA with 2048 key!");
 		
 		// Genera chiavi RSA
 		this.keyGenRSA = KeyPairGenerator.getInstance("RSA");

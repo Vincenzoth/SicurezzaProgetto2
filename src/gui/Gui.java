@@ -3,41 +3,74 @@ package gui;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 
 import javax.swing.JFrame;
-import javax.swing.JLayeredPane;
+import javax.swing.JOptionPane;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 
 import javax.swing.JTabbedPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import net.miginfocom.swing.MigLayout;
+import progetto.Incapsula;
+import progetto.KeyManager;
+import progetto.MyException;
+
 import javax.swing.JLabel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JCheckBox;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
 import javax.swing.JFileChooser;
 import javax.swing.JTextPane;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.JSeparator;
-//import com.jgoodies.forms.factories.DefaultComponentFactory;
 import javax.swing.border.TitledBorder;
 
 public class Gui {
 
 	private JFrame frmCipherfile;
-	private JTextField textField;
-	private JTextField textField_1;
-	private JTextField textField_2;
+	private JTextField IDSender_cipher_textField;
+	private JTextField IDReceiver_cipher_textField;
+	private JComboBox<String> type_cipher_comboBox;
+	private JComboBox<String> paddingMode_cipher_comboBox;
+	private JCheckBox signLabel_cipher;
+	private JTextField file_cipher_textField;
 	private JFileChooser fileCh1; 
-	private JTextField textField_3;
-	private JTextField ReceiverID;
+	private JTextField file_decipher_textField;
+	private JTextField receiverID_decipher_textField;
+	private JFileChooser fileCh2; 
+	private JTextPane result_decipher_textPane;
 	private JTextField idRemoveUserTextField;
 	private JTextField idNewUserTextField;
-	
+	private JComboBox<String> rsaKeySizeComboBox;
+	private JComboBox<String> paddingComboBox;
+	private JComboBox<String> signKeySizeComboBox;
+	private JComboBox<String> signTypeComboBox;
+
+
+
 	private Browse1_list browse1_listener;
+	private OkCipher_list okCipher_listener;
+	private Browse2_list browse2_listener;
+	private OkDecipher_list okDecipher_listener;
+	private NewUSer_list but_addUser_listener;
+	private RemoveUser_list but_RemoveUser_listener;
+
+	private KeyManager km;
+	private Incapsula inc;
 
 	/**
 	 * Launch the application.
@@ -46,10 +79,20 @@ public class Gui {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					Gui window = new Gui();
-					window.frmCipherfile.setVisible(true);
+					// set system look&Feel
+			        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+					
+					JPasswordField pf = new JPasswordField();
+					int getPass = JOptionPane.showConfirmDialog(null, pf, "Enter Password", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+					if (getPass == JOptionPane.OK_OPTION) {
+						String password = new String(pf.getPassword());
+						//password = "qwerty";
+						Gui window = new Gui(password);
+						window.frmCipherfile.setVisible(true);
+					}
 				} catch (Exception e) {
-					e.printStackTrace();
+					JOptionPane.showMessageDialog(null,"Password non valida", "Error", JOptionPane.ERROR_MESSAGE);
 				}
 			}
 		});
@@ -57,8 +100,19 @@ public class Gui {
 
 	/**
 	 * Create the application.
+	 * @throws IOException 
+	 * @throws InvalidKeySpecException 
+	 * @throws ClassNotFoundException 
+	 * @throws NoSuchPaddingException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws InvalidKeyException 
 	 */
-	public Gui() {
+	public Gui(String password) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, ClassNotFoundException, InvalidKeySpecException, IOException {
+
+		km = new KeyManager(password);
+		inc = new Incapsula(km);
+
+
 		initialize();
 	}
 
@@ -70,169 +124,280 @@ public class Gui {
 		frmCipherfile.setTitle("CipherFile");
 		frmCipherfile.setBounds(100, 100, 450, 376);
 		frmCipherfile.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
+
 		JTabbedPane JPane = new JTabbedPane(JTabbedPane.TOP);
 		frmCipherfile.getContentPane().add(JPane, BorderLayout.CENTER);
-		
+
 		JPanel ChiperPanel = new JPanel();
 		JPane.addTab("Cipher", null, ChiperPanel, null);
 		ChiperPanel.setLayout(new MigLayout("", "[][grow][grow][][][][][grow]", "[][22px][22px][][][][][][][][]"));
-		
+
+		// ------- tab cipher -----------------------------------------------------------------------------------------------------
+		// ------------------------------------------------------------------------------------------------------------------------
 		JLabel FileLabel = new JLabel("File");
 		FileLabel.setHorizontalAlignment(SwingConstants.LEFT);
 		ChiperPanel.add(FileLabel, "cell 0 0,alignx left");
-		
-		textField_2 = new JTextField();
-		ChiperPanel.add(textField_2, "cell 1 0 6 1,growx");
-		textField_2.setColumns(10);
-		textField_2.setEditable(false);
-		textField_2.setBackground(Color.white);
+
+		file_cipher_textField = new JTextField();
+		ChiperPanel.add(file_cipher_textField, "cell 1 0 6 1,growx");
+		file_cipher_textField.setColumns(10);
+		file_cipher_textField.setEditable(false);
+		file_cipher_textField.setBackground(Color.white);
 		fileCh1 = new JFileChooser();
-		
+
 		JButton FileChooserLabel = new JButton("Browse...");
 		ChiperPanel.add(FileChooserLabel, "cell 7 0,alignx center");
 		browse1_listener = new Browse1_list();
 		FileChooserLabel.addActionListener(browse1_listener);
-		
+
 		JLabel IdSenderLabel = new JLabel("ID Sender");
 		ChiperPanel.add(IdSenderLabel, "cell 0 1,alignx left");
-		
-		textField = new JTextField();
-		ChiperPanel.add(textField, "cell 1 1 6 1,growx");
-		textField.setColumns(10);
-		
+		IDSender_cipher_textField = new JTextField();
+		ChiperPanel.add(IDSender_cipher_textField, "cell 1 1 6 1,growx");
+		IDSender_cipher_textField.setColumns(10);
+
 		JLabel IdReceiverLabel = new JLabel("ID Receiver");
 		ChiperPanel.add(IdReceiverLabel, "cell 0 2,alignx left");
-		
-		textField_1 = new JTextField();
-		ChiperPanel.add(textField_1, "cell 1 2 6 1,growx");
-		textField_1.setColumns(10);
-		
+		IDReceiver_cipher_textField = new JTextField();
+		ChiperPanel.add(IDReceiver_cipher_textField, "cell 1 2 6 1,growx");
+		IDReceiver_cipher_textField.setColumns(10);
+
 		JLabel CipherLabel = new JLabel("Cipher");
 		ChiperPanel.add(CipherLabel, "flowy,cell 0 3,alignx left");
-		
-		JComboBox comboBox_1 = new JComboBox();
-		ChiperPanel.add(comboBox_1, "cell 1 3 6 1,growx");
-		
+		type_cipher_comboBox = new JComboBox<String>();
+		type_cipher_comboBox.setModel(new DefaultComboBoxModel<String>(new String[] {"AES", "DES", "DESede"}));
+		ChiperPanel.add(type_cipher_comboBox, "cell 1 3 6 1,growx");
+
+
 		JLabel ModeLabel = new JLabel("Mode");
 		ChiperPanel.add(ModeLabel, "cell 0 4,alignx left");
-		
-		JComboBox comboBox_2 = new JComboBox();
-		ChiperPanel.add(comboBox_2, "cell 1 4 6 1,growx");
-		
-		JCheckBox SignLabel = new JCheckBox("Sign");
-		ChiperPanel.add(SignLabel, "cell 0 6");
-		
+		paddingMode_cipher_comboBox = new JComboBox<String>();
+		paddingMode_cipher_comboBox.setModel(new DefaultComboBoxModel<String>(new String[] {"ECB", "CBC", "CFB"}));
+		ChiperPanel.add(paddingMode_cipher_comboBox, "cell 1 4 6 1,growx");
+
+		signLabel_cipher = new JCheckBox("Sign");
+		ChiperPanel.add(signLabel_cipher, "cell 0 6");
+
 		JButton CancelLabel = new JButton("Cancel");
 		ChiperPanel.add(CancelLabel, "cell 6 10");
-		
+
 		JButton OkLabel = new JButton("Ok");
 		ChiperPanel.add(OkLabel, "cell 7 10,alignx center");
-		
+		okCipher_listener = new OkCipher_list();
+		OkLabel.addActionListener(okCipher_listener);
+
+		// ------- tab decipher ---------------------------------------------------------------------------------------------------
+		// ------------------------------------------------------------------------------------------------------------------------
+
 		JPanel Decipher = new JPanel();
 		JPane.addTab("Decipher", null, Decipher, null);
 		Decipher.setLayout(new MigLayout("", "[grow][grow][]", "[][][grow][]"));
-		
+
 		JLabel ReceiverId = new JLabel("Receiver ID");
 		Decipher.add(ReceiverId, "cell 0 0,alignx left,aligny top");
-		
-		ReceiverID = new JTextField();
-		Decipher.add(ReceiverID, "cell 1 0 2 1,growx");
-		ReceiverID.setColumns(10);
-		
+		receiverID_decipher_textField = new JTextField();
+		Decipher.add(receiverID_decipher_textField, "cell 1 0 2 1,growx");
+		receiverID_decipher_textField.setColumns(10);
+
 		JLabel FileLabelDecipher = new JLabel("File");
 		Decipher.add(FileLabelDecipher, "cell 0 1,alignx left");
-		
-		textField_3 = new JTextField();
-		Decipher.add(textField_3, "cell 1 1,growx");
-		textField_3.setColumns(10);
-		
-		JButton loadButtonDecipher = new JButton("load");
+		file_decipher_textField = new JTextField();
+		Decipher.add(file_decipher_textField, "cell 1 1,growx");
+		//file_decipher_textField.setColumns(10);
+		file_decipher_textField.setEditable(false);
+		file_decipher_textField.setBackground(Color.white);
+		fileCh2 = new JFileChooser();
+
+		JButton loadButtonDecipher = new JButton("Browse...");
 		Decipher.add(loadButtonDecipher, "cell 2 1,alignx center");
-		
-		JTextPane textPane = new JTextPane();
-		Decipher.add(textPane, "cell 0 2 3 1,grow");
-		
+		browse2_listener = new Browse2_list();
+		loadButtonDecipher.addActionListener(browse2_listener);
+
+
+		result_decipher_textPane = new JTextPane();
+		result_decipher_textPane.setEditable(false);
+		Decipher.add(result_decipher_textPane, "cell 0 2 3 1,grow");
+
 		JButton cancelButtonDecipher = new JButton("Cancel");
 		Decipher.add(cancelButtonDecipher, "flowx,cell 1 3,alignx right,aligny center");
-		
+
 		JButton okButtonDecipher = new JButton("Ok");
 		Decipher.add(okButtonDecipher, "cell 2 3,alignx center,aligny center");
-		
+		okDecipher_listener = new OkDecipher_list();
+		okButtonDecipher.addActionListener(okDecipher_listener);
+
+		// ------- tab User -------------------------------------------------------------------------------------------------------
+		// ------------------------------------------------------------------------------------------------------------------------
+
 		JPanel UsersPanel = new JPanel();
 		JPane.addTab("Users", null, UsersPanel, null);
 		UsersPanel.setLayout(new MigLayout("", "[grow][grow][][][]", "[grow][][][][][][][][][][][][grow][]"));
-		
+
 		JPanel addUserPanel = new JPanel();
 		addUserPanel.setBorder(new TitledBorder(null, "Add User", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		UsersPanel.add(addUserPanel, "cell 0 0 5 12,grow");
 		addUserPanel.setLayout(new MigLayout("", "[12px][][grow][116px,grow][73px][55px][45px][5px][58px][5px][46px][5px][74px][55px][53px][120px]", "[][][][][][]"));
-		
+
 		JLabel idNewUserLabel = new JLabel("ID");
 		addUserPanel.add(idNewUserLabel, "cell 1 0");
-		
+
 		idNewUserTextField = new JTextField();
 		addUserPanel.add(idNewUserTextField, "cell 3 0 13 1,growx");
 		idNewUserTextField.setColumns(10);
-		
+
 		JLabel rsaKeySizeLabel = new JLabel("RSA key size");
 		addUserPanel.add(rsaKeySizeLabel, "cell 1 1");
-		
-		JComboBox rsaKeySizeComboBox = new JComboBox();
-		rsaKeySizeComboBox.setModel(new DefaultComboBoxModel(new String[] {"1024", "2048"}));
+
+		rsaKeySizeComboBox = new JComboBox<String>();
+		rsaKeySizeComboBox.setModel(new DefaultComboBoxModel<String>(new String[] {"1024", "2048"}));
 		addUserPanel.add(rsaKeySizeComboBox, "cell 3 1 13 1,growx");
-		
+
 		JLabel paddingLabel = new JLabel("Padding");
 		addUserPanel.add(paddingLabel, "cell 1 2");
-		
-		JComboBox paddingComboBox = new JComboBox();
-		paddingComboBox.setModel(new DefaultComboBoxModel(new String[] {"PKCS1Padding", "OAEPPadding"}));
+
+		paddingComboBox = new JComboBox<String>();
+		paddingComboBox.setModel(new DefaultComboBoxModel<String>(new String[] {"PKCS1Padding", "OAEPPadding"}));
 		addUserPanel.add(paddingComboBox, "cell 3 2 13 1,growx");
-		
+
 		JLabel signKeySizeLabel = new JLabel("Sign key size");
 		addUserPanel.add(signKeySizeLabel, "cell 1 3");
-		
-		JComboBox signKeySizeComboBox = new JComboBox();
-		signKeySizeComboBox.setModel(new DefaultComboBoxModel(new String[] {"1024", "2048"}));
+
+		signKeySizeComboBox = new JComboBox<String>();
+		signKeySizeComboBox.setModel(new DefaultComboBoxModel<String>(new String[] {"1024", "2048"}));
 		addUserPanel.add(signKeySizeComboBox, "cell 3 3 13 1,growx");
-		
+
 		JLabel signTypeLabel = new JLabel("Sign type");
 		addUserPanel.add(signTypeLabel, "cell 1 4");
-		
-		JComboBox signTypeComboBox = new JComboBox();
-		signTypeComboBox.setModel(new DefaultComboBoxModel(new String[] {"SHA1withDSA", "SHA224withDSA", "SHA256withDSA"}));
+
+		signTypeComboBox = new JComboBox<String>();
+		signTypeComboBox.setModel(new DefaultComboBoxModel<String>(new String[] {"SHA1withDSA", "SHA224withDSA", "SHA256withDSA"}));
 		addUserPanel.add(signTypeComboBox, "cell 3 4 13 1,growx");
-		
+
 		JButton cancelNewUserButton = new JButton("Cancel");
 		addUserPanel.add(cancelNewUserButton, "cell 12 5,alignx right,aligny top");
-		
+
 		JButton addNewUserButton = new JButton("Add");
 		addUserPanel.add(addNewUserButton, "cell 15 5,alignx left,aligny top");
-		
+		but_addUser_listener = new NewUSer_list();
+		addNewUserButton.addActionListener(but_addUser_listener);
+
 		JPanel removeUserPanel = new JPanel();
 		removeUserPanel.setBorder(new TitledBorder(null, "Remove User", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		UsersPanel.add(removeUserPanel, "cell 0 12 5 2,grow");
 		removeUserPanel.setLayout(new MigLayout("", "[12px][116px,grow][71px][79px][]", "[25px][]"));
-		
+
 		JLabel idUserRemoveLabel = new JLabel("ID");
 		removeUserPanel.add(idUserRemoveLabel, "cell 0 0,alignx trailing,aligny center");
-		
+
 		idRemoveUserTextField = new JTextField();
 		removeUserPanel.add(idRemoveUserTextField, "cell 1 0 4 1,growx");
 		idRemoveUserTextField.setColumns(10);
-		
+
 		JButton cancelRemoveUserButton = new JButton("Cancel");
 		removeUserPanel.add(cancelRemoveUserButton, "cell 3 1,alignx left,aligny top");
-		
+
 		JButton removeUserButton = new JButton("Remove");
 		removeUserPanel.add(removeUserButton, "cell 4 1,alignx left,aligny top");
+		but_RemoveUser_listener = new RemoveUser_list();
+		removeUserButton.addActionListener(but_RemoveUser_listener);
 	}
-	
+
 	private class Browse1_list implements ActionListener {
-        public void actionPerformed(ActionEvent evt) {
-        	fileCh1.showOpenDialog(null);
-        	textField_2.setText(fileCh1.getSelectedFile().getPath());
-        }
-}
+		public void actionPerformed(ActionEvent evt) {
+			fileCh1.showOpenDialog(null);
+			file_cipher_textField.setText(fileCh1.getSelectedFile().getPath());
+		}
+	}
+
+	private class OkCipher_list implements ActionListener {
+		public void actionPerformed(ActionEvent evt) {
+			try {	
+				String filePath = file_cipher_textField.getText();
+				String IDSender = IDSender_cipher_textField.getText();
+				String IDreceiver = IDReceiver_cipher_textField.getText();
+				String cipherType = type_cipher_comboBox.getSelectedItem().toString();
+				String mode = paddingMode_cipher_comboBox.getSelectedItem().toString();
+				boolean sig = signLabel_cipher.isSelected();
+
+
+				inc.initCipher(cipherType, mode, "PKCS5Padding");
+				inc.writeCipherFile(filePath, IDSender, IDreceiver, sig);
+
+
+				JOptionPane.showMessageDialog(null, "FIle cifrato con successo!");
+			} catch (InvalidKeyException | IOException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | SignatureException e) {
+				JOptionPane.showMessageDialog(null, e.getStackTrace(), "Error", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+	}
+
+	// ---- tab Decipher --------------------------------------------------------------------------------------
+	// --------------------------------------------------------------------------------------------------------
+
+	private class Browse2_list implements ActionListener {
+		public void actionPerformed(ActionEvent evt) {
+			fileCh2.showOpenDialog(null);
+			file_decipher_textField.setText(fileCh2.getSelectedFile().getPath());
+		}
+	}
+
+	private class OkDecipher_list implements ActionListener {
+		public void actionPerformed(ActionEvent evt) {
+			try {	
+
+				String filePath = file_decipher_textField.getText();
+				String IDreceiver = receiverID_decipher_textField.getText();
+
+				int isVer = inc.writeDecipherFile(filePath, IDreceiver);
+
+
+				if(isVer == 1)
+					result_decipher_textPane.setText("La firma è valida");
+				else if (isVer == -1)
+					result_decipher_textPane.setText("La firma NON è valida");
+				else
+					result_decipher_textPane.setText("Il file non è firmato");
+
+
+				JOptionPane.showMessageDialog(null, "File decifrato con successo!");
+			} catch (InvalidKeyException | IOException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | SignatureException | InvalidKeySpecException | InvalidAlgorithmParameterException | MyException e) {
+				JOptionPane.showMessageDialog(null, e.getStackTrace(), "Error", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+	}
+
+
+	// ---- tab User --- --------------------------------------------------------------------------------------
+	// --------------------------------------------------------------------------------------------------------
+
+	private class NewUSer_list implements ActionListener {
+		public void actionPerformed(ActionEvent evt) {
+			try {				
+				String ID = idNewUserTextField.getText();
+				int keyLenCod = Integer.parseInt(rsaKeySizeComboBox.getSelectedItem().toString());
+				String paddingMode = paddingComboBox.getSelectedItem().toString();
+				int keyLenVer = Integer.parseInt(signKeySizeComboBox.getSelectedItem().toString());
+				String sigType = signTypeComboBox.getSelectedItem().toString();
+
+				km.newUser(ID, keyLenCod, paddingMode, keyLenVer, sigType);
+				JOptionPane.showMessageDialog(null, "Nuovo utente inserito");
+			} catch (InvalidKeyException | NoSuchAlgorithmException | IOException | MyException e) {
+				JOptionPane.showMessageDialog(null, e.getStackTrace(), "Error", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+	}
+
+	private class RemoveUser_list implements ActionListener {
+		public void actionPerformed(ActionEvent evt) {
+			try {				
+				String ID = idRemoveUserTextField.getText();
+
+				km.removeUser(ID);
+				JOptionPane.showMessageDialog(null, "Utente rimosso");
+			} catch (InvalidKeyException | IOException e) {
+				JOptionPane.showMessageDialog(null, e.getStackTrace(), "Error", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+	}
 
 }
