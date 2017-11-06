@@ -162,4 +162,7 @@ public class KeyManager {
 		return keys.get(userID).getSigType();
 	}
 
+	public HashMap<String,User> getKeysMap(){
+		return keys;
+	}
 }

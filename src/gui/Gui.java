@@ -9,6 +9,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -24,6 +25,7 @@ import net.miginfocom.swing.MigLayout;
 import progetto.Incapsula;
 import progetto.KeyManager;
 import progetto.MyException;
+import progetto.User;
 
 import javax.swing.JLabel;
 import javax.swing.JButton;
@@ -42,25 +44,24 @@ import javax.swing.border.TitledBorder;
 public class Gui {
 
 	private JFrame frmCipherfile;
-	private JTextField IDSender_cipher_textField;
-	private JTextField IDReceiver_cipher_textField;
 	private JComboBox<String> type_cipher_comboBox;
 	private JComboBox<String> paddingMode_cipher_comboBox;
+	private JComboBox<String> idSenderComboBox;
+	private JComboBox<String> idReceiverComboBox;	
+	
 	private JCheckBox signLabel_cipher;
 	private JTextField file_cipher_textField;
 	private JFileChooser fileCh1; 
 	private JTextField file_decipher_textField;
-	private JTextField receiverID_decipher_textField;
 	private JFileChooser fileCh2; 
 	private JTextPane result_decipher_textPane;
-	private JTextField idRemoveUserTextField;
 	private JTextField idNewUserTextField;
 	private JComboBox<String> rsaKeySizeComboBox;
 	private JComboBox<String> paddingComboBox;
 	private JComboBox<String> signKeySizeComboBox;
 	private JComboBox<String> signTypeComboBox;
-
-
+	private JComboBox<String> idReceiverDecipherComboBox;
+	private JComboBox<String> removeUserComboBox;
 
 	private Browse1_list browse1_listener;
 	private OkCipher_list okCipher_listener;
@@ -71,6 +72,7 @@ public class Gui {
 
 	private KeyManager km;
 	private Incapsula inc;
+	private ArrayList<String> idUsers;
 
 	/**
 	 * Launch the application.
@@ -85,10 +87,10 @@ public class Gui {
 					JPasswordField pf = new JPasswordField();
 					int getPass = JOptionPane.showConfirmDialog(null, pf, "Enter Password", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-					if (getPass == JOptionPane.OK_OPTION) {
+					if (getPass == JOptionPane.OK_OPTION) {						
 						String password = new String(pf.getPassword());
-						//password = "qwerty";
-						Gui window = new Gui(password);
+						//password = "qwerty";						
+						Gui window = new Gui(password);						
 						window.frmCipherfile.setVisible(true);
 					}
 				} catch (Exception e) {
@@ -110,8 +112,13 @@ public class Gui {
 	public Gui(String password) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, ClassNotFoundException, InvalidKeySpecException, IOException {
 
 		km = new KeyManager(password);
-		inc = new Incapsula(km);
-
+		inc = new Incapsula(km);				
+		idUsers = new ArrayList<String>();
+		
+		for (User user: km.getKeysMap().values()){			
+			idUsers.add(user.getID());			
+		}
+		
 
 		initialize();
 	}
@@ -130,7 +137,7 @@ public class Gui {
 
 		JPanel ChiperPanel = new JPanel();
 		JPane.addTab("Cipher", null, ChiperPanel, null);
-		ChiperPanel.setLayout(new MigLayout("", "[][grow][grow][][][][][grow]", "[][22px][22px][][][][][][][][]"));
+		ChiperPanel.setLayout(new MigLayout("", "[][grow][grow][][][][][]", "[][22px][22px][][][][][grow]"));
 
 		// ------- tab cipher -----------------------------------------------------------------------------------------------------
 		// ------------------------------------------------------------------------------------------------------------------------
@@ -152,15 +159,17 @@ public class Gui {
 
 		JLabel IdSenderLabel = new JLabel("ID Sender");
 		ChiperPanel.add(IdSenderLabel, "cell 0 1,alignx left");
-		IDSender_cipher_textField = new JTextField();
-		ChiperPanel.add(IDSender_cipher_textField, "cell 1 1 6 1,growx");
-		IDSender_cipher_textField.setColumns(10);
-
+		
+		idSenderComboBox = new JComboBox<String>();						
+		idSenderComboBox.setModel(new DefaultComboBoxModel(idUsers.toArray()));
+		ChiperPanel.add(idSenderComboBox, "cell 1 1 6 1,growx");		
+		
 		JLabel IdReceiverLabel = new JLabel("ID Receiver");
-		ChiperPanel.add(IdReceiverLabel, "cell 0 2,alignx left");
-		IDReceiver_cipher_textField = new JTextField();
-		ChiperPanel.add(IDReceiver_cipher_textField, "cell 1 2 6 1,growx");
-		IDReceiver_cipher_textField.setColumns(10);
+		ChiperPanel.add(IdReceiverLabel, "cell 0 2,alignx trailing");
+		
+		idReceiverComboBox = new JComboBox<String>();
+		idReceiverComboBox.setModel(new DefaultComboBoxModel(idUsers.toArray()));
+		ChiperPanel.add(idReceiverComboBox, "cell 1 2 6 1,growx");
 
 		JLabel CipherLabel = new JLabel("Cipher");
 		ChiperPanel.add(CipherLabel, "flowy,cell 0 3,alignx left");
@@ -177,27 +186,28 @@ public class Gui {
 
 		signLabel_cipher = new JCheckBox("Sign");
 		ChiperPanel.add(signLabel_cipher, "cell 0 6");
-
-		JButton CancelLabel = new JButton("Cancel");
-		ChiperPanel.add(CancelLabel, "cell 6 10");
-
-		JButton OkLabel = new JButton("Ok");
-		ChiperPanel.add(OkLabel, "cell 7 10,alignx center");
+				
+						JButton CancelLabel = new JButton("Cancel");
+						ChiperPanel.add(CancelLabel, "cell 6 7,aligny bottom");
+		
+				JButton OkLabel = new JButton("Ok");
+				ChiperPanel.add(OkLabel, "cell 7 7,alignx center,aligny bottom");
+				OkLabel.addActionListener(okCipher_listener);
 		okCipher_listener = new OkCipher_list();
-		OkLabel.addActionListener(okCipher_listener);
 
 		// ------- tab decipher ---------------------------------------------------------------------------------------------------
 		// ------------------------------------------------------------------------------------------------------------------------
 
 		JPanel Decipher = new JPanel();
 		JPane.addTab("Decipher", null, Decipher, null);
-		Decipher.setLayout(new MigLayout("", "[grow][grow][]", "[][][grow][]"));
+		Decipher.setLayout(new MigLayout("", "[][grow][]", "[][][grow][]"));
 
 		JLabel ReceiverId = new JLabel("Receiver ID");
 		Decipher.add(ReceiverId, "cell 0 0,alignx left,aligny top");
-		receiverID_decipher_textField = new JTextField();
-		Decipher.add(receiverID_decipher_textField, "cell 1 0 2 1,growx");
-		receiverID_decipher_textField.setColumns(10);
+		
+		idReceiverDecipherComboBox = new JComboBox<String>();
+		idReceiverDecipherComboBox.setModel(new DefaultComboBoxModel(idUsers.toArray()));
+		Decipher.add(idReceiverDecipherComboBox, "cell 1 0 2 1,growx");
 
 		JLabel FileLabelDecipher = new JLabel("File");
 		Decipher.add(FileLabelDecipher, "cell 0 1,alignx left");
@@ -288,10 +298,10 @@ public class Gui {
 
 		JLabel idUserRemoveLabel = new JLabel("ID");
 		removeUserPanel.add(idUserRemoveLabel, "cell 0 0,alignx trailing,aligny center");
-
-		idRemoveUserTextField = new JTextField();
-		removeUserPanel.add(idRemoveUserTextField, "cell 1 0 4 1,growx");
-		idRemoveUserTextField.setColumns(10);
+		
+		removeUserComboBox = new JComboBox<String>();
+		removeUserComboBox.setModel(new DefaultComboBoxModel(idUsers.toArray()));
+		removeUserPanel.add(removeUserComboBox, "cell 1 0 4 1,growx");
 
 		JButton cancelRemoveUserButton = new JButton("Cancel");
 		removeUserPanel.add(cancelRemoveUserButton, "cell 3 1,alignx left,aligny top");
@@ -313,8 +323,8 @@ public class Gui {
 		public void actionPerformed(ActionEvent evt) {
 			try {	
 				String filePath = file_cipher_textField.getText();
-				String IDSender = IDSender_cipher_textField.getText();
-				String IDreceiver = IDReceiver_cipher_textField.getText();
+				String IDSender = idSenderComboBox.getSelectedItem().toString();
+				String IDreceiver = idReceiverComboBox.getSelectedItem().toString();
 				String cipherType = type_cipher_comboBox.getSelectedItem().toString();
 				String mode = paddingMode_cipher_comboBox.getSelectedItem().toString();
 				boolean sig = signLabel_cipher.isSelected();
@@ -322,6 +332,7 @@ public class Gui {
 
 				inc.initCipher(cipherType, mode, "PKCS5Padding");
 				inc.writeCipherFile(filePath, IDSender, IDreceiver, sig);
+				
 
 
 				JOptionPane.showMessageDialog(null, "FIle cifrato con successo!");
@@ -346,7 +357,7 @@ public class Gui {
 			try {	
 
 				String filePath = file_decipher_textField.getText();
-				String IDreceiver = receiverID_decipher_textField.getText();
+				String IDreceiver = idReceiverDecipherComboBox.getSelectedItem().toString();
 
 				int isVer = inc.writeDecipherFile(filePath, IDreceiver);
 
@@ -390,7 +401,7 @@ public class Gui {
 	private class RemoveUser_list implements ActionListener {
 		public void actionPerformed(ActionEvent evt) {
 			try {				
-				String ID = idRemoveUserTextField.getText();
+				String ID = removeUserComboBox.getSelectedItem().toString();
 
 				km.removeUser(ID);
 				JOptionPane.showMessageDialog(null, "Utente rimosso");
