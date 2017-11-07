@@ -119,11 +119,14 @@ public class KeyManager {
 
 		// aggiungi al file	
 		this.cipher.init(Cipher.ENCRYPT_MODE, key);
+		File keysFile = new File(FILE_NAME);
+		if(!keysFile.exists()) 			 
+			keysFile.getParentFile().mkdirs();
 		ObjectOutputStream oss;
-		oss = new ObjectOutputStream(new CipherOutputStream(new FileOutputStream(FILE_NAME), cipher));
+		oss = new ObjectOutputStream(new CipherOutputStream(new FileOutputStream(keysFile), cipher));
 		oss.writeObject(keys);
 		oss.close();
-		
+
 		return retValue != null ? false : true;
 	}
 
@@ -136,7 +139,7 @@ public class KeyManager {
 		oss = new ObjectOutputStream(new CipherOutputStream(new FileOutputStream(FILE_NAME), cipher));
 		oss.writeObject(keys);
 		oss.close();
-		
+
 		return retValue == null ? false : true;
 
 	}
@@ -170,7 +173,7 @@ public class KeyManager {
 		for (User user: keys.values()){			
 			usersID.add(user.getID());			
 		}
-		
+
 		return usersID.toArray(new String[usersID.size()]);
 	}
 }
