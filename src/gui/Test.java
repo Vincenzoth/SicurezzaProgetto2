@@ -51,13 +51,13 @@ public class Test {
 			System.out.println();
 			System.out.println("\n  test  -------     -------   cipher:");
 			
-			boolean sig = true;
+			boolean sig = false;
 			Incapsula inc = new Incapsula(km);
 			inc.initCipher("DESede", "CBC", "PKCS5Padding");
-			inc.writeCipherFile(PATH + "/file/" + "documento.pdf", "giu", "vin", sig);		
+			inc.writeCipherFile(PATH + "/file/" + "documento.pdf", "vin", "giu", sig, PATH+"/keys/privateSig_vin");		
 			System.out.println("File Criptato");
-
-			int isVer = inc.writeDecipherFile(PATH + "/file/" + "documento.pdf.ts", "vin", PATH+"/keys/privateKey_vin");
+			
+			int isVer = inc.writeDecipherFile(PATH+"/file/"+"documento.pdf.ts", "giu", PATH+"/keys/privateKey_giu");
 			System.out.println("File decriptato");
 
 

@@ -3,6 +3,8 @@ package gui;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
@@ -30,7 +32,6 @@ import javax.swing.JLabel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JCheckBox;
-import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.JFileChooser;
 import javax.swing.JTextPane;
@@ -43,34 +44,38 @@ import javax.swing.border.TitledBorder;
 public class Gui {
 	final static String PATH_KEYS = Paths.get(System.getProperty("user.dir")).toString() + "/keys";
 
+	private JLabel keyLabelSig;
 	private JFrame frmCipherfile;
-	private JComboBox<String> type_cipher_comboBox;
-	private JComboBox<String> paddingMode_cipher_comboBox;
-	private JComboBox<String> idSenderComboBox;
-	private JComboBox<String> idReceiverComboBox;	
-
 	private JCheckBox signLabel_cipher;
 	private JTextField file_cipher_textField;
 	private JFileChooser fileCh1; 
 	private JFileChooser fileCh2;
 	private JTextField file_decipher_textField; 
 	private JTextField pkey_decipher_textField;
-	private JTextPane result_decipher_textPane;
 	private JTextField idNewUserTextField;
+	private JTextField pkeyVer_cipher_textField;
+	private JTextPane result_decipher_textPane;
+	private JComboBox<String> type_cipher_comboBox;
+	private JComboBox<String> paddingMode_cipher_comboBox;
+	private JComboBox<String> idSenderComboBox;
+	private JComboBox<String> idReceiverComboBox;	
 	private JComboBox<String> rsaKeySizeComboBox;
 	private JComboBox<String> paddingComboBox;
 	private JComboBox<String> signKeySizeComboBox;
 	private JComboBox<String> signTypeComboBox;
 	private JComboBox<String> idReceiverDecipherComboBox;
 	private JComboBox<String> removeUserComboBox;
-
+	private JButton keyloadButtonVer;
+	
 	private Browse1_list browse1_listener;
+	private BrowseKeyVer_cipher_list browseKeyVer_cipher_listener;
 	private OkCipher_list okCipher_listener;
 	private Browse2_list browse2_listener;
 	private BrowseKey_decipher_list browseKey_decipher_listener;
 	private OkDecipher_list okDecipher_listener;
 	private NewUSer_list but_addUser_listener;
 	private RemoveUser_list but_RemoveUser_listener;
+	private Check_sig_list check_sig_listener;
 
 	private KeyManager km;
 	private Incapsula inc;
@@ -143,9 +148,7 @@ public class Gui {
 
 
 		JLabel FileLabel = new JLabel("File");
-		FileLabel.setHorizontalAlignment(SwingConstants.LEFT);
-		ChiperPanel.add(FileLabel, "cell 0 0,alignx left");
-
+		ChiperPanel.add(FileLabel, "cell 0 0,alignx trailing");
 		file_cipher_textField = new JTextField();
 		ChiperPanel.add(file_cipher_textField, "cell 1 0 6 1,growx");
 		file_cipher_textField.setColumns(10);
@@ -158,7 +161,7 @@ public class Gui {
 		FileChooserLabel.addActionListener(browse1_listener);
 
 		JLabel IdSenderLabel = new JLabel("ID Sender");
-		ChiperPanel.add(IdSenderLabel, "cell 0 1,alignx left");
+		ChiperPanel.add(IdSenderLabel, "cell 0 1,alignx trailing");
 		idSenderComboBox = new JComboBox<String>();						
 		idSenderComboBox.setModel(new DefaultComboBoxModel<String>(km.getAllUsers()));
 		ChiperPanel.add(idSenderComboBox, "cell 1 1 6 1,growx");		
@@ -170,21 +173,37 @@ public class Gui {
 		ChiperPanel.add(idReceiverComboBox, "cell 1 2 6 1,growx");
 
 		JLabel CipherLabel = new JLabel("Cipher");
-		ChiperPanel.add(CipherLabel, "flowy,cell 0 3,alignx left");
+		ChiperPanel.add(CipherLabel, "flowy,cell 0 3,alignx trailing");
 		type_cipher_comboBox = new JComboBox<String>();
 		type_cipher_comboBox.setModel(new DefaultComboBoxModel<String>(new String[] {"AES", "DES", "DESede"}));
 		ChiperPanel.add(type_cipher_comboBox, "cell 1 3 6 1,growx");
 
 
 		JLabel ModeLabel = new JLabel("Mode");
-		ChiperPanel.add(ModeLabel, "cell 0 4,alignx left");
+		ChiperPanel.add(ModeLabel, "cell 0 4,alignx trailing");
 		paddingMode_cipher_comboBox = new JComboBox<String>();
 		paddingMode_cipher_comboBox.setModel(new DefaultComboBoxModel<String>(new String[] {"ECB", "CBC", "CFB"}));
 		ChiperPanel.add(paddingMode_cipher_comboBox, "cell 1 4 6 1,growx");
 
 		signLabel_cipher = new JCheckBox("Sign");
-		ChiperPanel.add(signLabel_cipher, "cell 0 6");
-
+		ChiperPanel.add(signLabel_cipher, "cell 0 5");
+		check_sig_listener = new Check_sig_list();
+		signLabel_cipher.addMouseListener(check_sig_listener);
+		
+		keyLabelSig = new JLabel("Chiave Firma");
+		ChiperPanel.add(keyLabelSig, "cell 0 6,alignx trailing");
+		pkeyVer_cipher_textField = new JTextField();
+		ChiperPanel.add(pkeyVer_cipher_textField, "cell 1 6 6 1,growx");
+		pkeyVer_cipher_textField.setEditable(false);
+		pkeyVer_cipher_textField.setBackground(Color.white);
+		keyloadButtonVer = new JButton("Browse...");
+		ChiperPanel.add(keyloadButtonVer, "cell 7 6,alignx center");
+		browseKeyVer_cipher_listener = new BrowseKeyVer_cipher_list();
+		keyloadButtonVer.addActionListener(browseKeyVer_cipher_listener);
+		keyLabelSig.setVisible(false);
+		pkeyVer_cipher_textField.setVisible(false);
+		keyloadButtonVer.setVisible(false);
+		
 		JButton CancelLabel = new JButton("Cancel");
 		ChiperPanel.add(CancelLabel, "cell 6 7,aligny bottom");
 
@@ -234,10 +253,10 @@ public class Gui {
 		Decipher.add(result_decipher_textPane, "cell 0 3 3 1,grow");
 
 		JButton cancelButtonDecipher = new JButton("Cancel");
-		Decipher.add(cancelButtonDecipher, "flowx,cell 1 4,alignx right,aligny center");
+		Decipher.add(cancelButtonDecipher, "flowx,cell 1 4,alignx right,aligny bottom");
 
 		JButton okButtonDecipher = new JButton("Ok");
-		Decipher.add(okButtonDecipher, "cell 2 4,alignx center,aligny center");
+		Decipher.add(okButtonDecipher, "cell 2 4,alignx center,aligny bottom");
 		okDecipher_listener = new OkDecipher_list();
 		okButtonDecipher.addActionListener(okDecipher_listener);
 
@@ -323,6 +342,39 @@ public class Gui {
 			file_cipher_textField.setText(fileCh1.getSelectedFile().getPath());
 		}
 	}
+	
+	private class BrowseKey_decipher_list implements ActionListener {
+		public void actionPerformed(ActionEvent evt) {
+			fileCh2.showOpenDialog(null);
+			pkey_decipher_textField.setText(fileCh2.getSelectedFile().getPath());
+		}
+	}
+	
+	private class Check_sig_list implements MouseListener {
+
+		public void mouseClicked(MouseEvent e) {
+			if(signLabel_cipher.isSelected()) {
+				keyLabelSig.setVisible(true);
+				pkeyVer_cipher_textField.setVisible(true);
+				keyloadButtonVer.setVisible(true);
+			}else {
+				keyLabelSig.setVisible(false);
+				pkeyVer_cipher_textField.setVisible(false);
+				keyloadButtonVer.setVisible(false);
+			}
+				
+		}
+
+		@Override
+		public void mousePressed(MouseEvent e) {}
+		@Override
+		public void mouseReleased(MouseEvent e) {}
+		@Override
+		public void mouseEntered(MouseEvent e) {}
+		@Override
+		public void mouseExited(MouseEvent e) {}
+
+	}
 
 	private class OkCipher_list implements ActionListener {
 		public void actionPerformed(ActionEvent evt) {
@@ -333,16 +385,17 @@ public class Gui {
 				String cipherType = type_cipher_comboBox.getSelectedItem().toString();
 				String mode = paddingMode_cipher_comboBox.getSelectedItem().toString();
 				boolean sig = signLabel_cipher.isSelected();
-
+				String keyPath = pkeyVer_cipher_textField.getText();
 
 				inc.initCipher(cipherType, mode, "PKCS5Padding");
-				inc.writeCipherFile(filePath, IDSender, IDreceiver, sig);			
-
+				inc.writeCipherFile(filePath, IDSender, IDreceiver, sig, keyPath);			
 
 
 				JOptionPane.showMessageDialog(null, "FIle cifrato con successo!");
 			} catch (InvalidKeyException | IOException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | SignatureException e) {
 				JOptionPane.showMessageDialog(null, "Impossibile cifrare!", "Error", JOptionPane.ERROR_MESSAGE);
+			} catch (InvalidKeySpecException e) {
+				JOptionPane.showMessageDialog(null, "Impossibile cifrare!\n Errore nella firma.", "Error", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 	}
@@ -357,10 +410,10 @@ public class Gui {
 		}
 	}
 
-	private class BrowseKey_decipher_list implements ActionListener {
+	private class BrowseKeyVer_cipher_list implements ActionListener {
 		public void actionPerformed(ActionEvent evt) {
 			fileCh2.showOpenDialog(null);
-			pkey_decipher_textField.setText(fileCh2.getSelectedFile().getPath());
+			pkeyVer_cipher_textField.setText(fileCh2.getSelectedFile().getPath());
 		}
 	}
 

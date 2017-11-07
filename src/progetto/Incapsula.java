@@ -58,8 +58,8 @@ public class Incapsula {
 		cipher = Cipher.getInstance(cifrario + "/" + mode + "/" + padding);		
 	}
 
-	public void writeCipherFile(String file, String sender, String receiver, boolean signature) throws IllegalBlockSizeException,
-	BadPaddingException, IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, SignatureException {
+	public void writeCipherFile(String file, String sender, String receiver, boolean signature, String keyVerPath) throws IllegalBlockSizeException,
+	BadPaddingException, IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, SignatureException, InvalidKeySpecException {
 		
 		// Cifra il messaggio
 		SecretKey secretKey = genSecretKey();
@@ -70,7 +70,11 @@ public class Incapsula {
 		int sigLength = 0;
 		if (signature) {		
 			sig = Signature.getInstance(km.getSigType(sender));
-			sig.initSign(km.getPrivateKeyVer(sender));
+			//Leggiamo chiave
+			byte[] keyBytes = Files.readAllBytes(Paths.get(keyVerPath));
+			KeyFactory kf = KeyFactory.getInstance("DSA");
+			PrivateKey sigKey = kf.generatePrivate(new PKCS8EncodedKeySpec(keyBytes));
+			sig.initSign(sigKey);
 			// Trasmissione dell'engine
 			sig.update(Files.readAllBytes(Paths.get(file)));
 			// Generazione della firma digitale
