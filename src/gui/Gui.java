@@ -9,7 +9,6 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayList;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -25,7 +24,6 @@ import net.miginfocom.swing.MigLayout;
 import progetto.Incapsula;
 import progetto.KeyManager;
 import progetto.MyException;
-import progetto.User;
 
 import javax.swing.JLabel;
 import javax.swing.JButton;
@@ -48,7 +46,7 @@ public class Gui {
 	private JComboBox<String> paddingMode_cipher_comboBox;
 	private JComboBox<String> idSenderComboBox;
 	private JComboBox<String> idReceiverComboBox;	
-	
+
 	private JCheckBox signLabel_cipher;
 	private JTextField file_cipher_textField;
 	private JFileChooser fileCh1; 
@@ -72,7 +70,6 @@ public class Gui {
 
 	private KeyManager km;
 	private Incapsula inc;
-	private ArrayList<String> idUsers;
 
 	/**
 	 * Launch the application.
@@ -82,8 +79,8 @@ public class Gui {
 			public void run() {
 				try {
 					// set system look&Feel
-			        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-					
+					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+
 					JPasswordField pf = new JPasswordField();
 					int getPass = JOptionPane.showConfirmDialog(null, pf, "Enter Password", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
@@ -113,12 +110,6 @@ public class Gui {
 
 		km = new KeyManager(password);
 		inc = new Incapsula(km);				
-		idUsers = new ArrayList<String>();
-		
-		for (User user: km.getKeysMap().values()){			
-			idUsers.add(user.getID());			
-		}
-		
 
 		initialize();
 	}
@@ -159,16 +150,14 @@ public class Gui {
 
 		JLabel IdSenderLabel = new JLabel("ID Sender");
 		ChiperPanel.add(IdSenderLabel, "cell 0 1,alignx left");
-		
 		idSenderComboBox = new JComboBox<String>();						
-		idSenderComboBox.setModel(new DefaultComboBoxModel(idUsers.toArray()));
+		idSenderComboBox.setModel(new DefaultComboBoxModel<String>(km.getAllUsers()));
 		ChiperPanel.add(idSenderComboBox, "cell 1 1 6 1,growx");		
-		
+
 		JLabel IdReceiverLabel = new JLabel("ID Receiver");
 		ChiperPanel.add(IdReceiverLabel, "cell 0 2,alignx trailing");
-		
 		idReceiverComboBox = new JComboBox<String>();
-		idReceiverComboBox.setModel(new DefaultComboBoxModel(idUsers.toArray()));
+		idReceiverComboBox.setModel(new DefaultComboBoxModel<String>(km.getAllUsers()));
 		ChiperPanel.add(idReceiverComboBox, "cell 1 2 6 1,growx");
 
 		JLabel CipherLabel = new JLabel("Cipher");
@@ -186,13 +175,13 @@ public class Gui {
 
 		signLabel_cipher = new JCheckBox("Sign");
 		ChiperPanel.add(signLabel_cipher, "cell 0 6");
-				
-						JButton CancelLabel = new JButton("Cancel");
-						ChiperPanel.add(CancelLabel, "cell 6 7,aligny bottom");
-		
-				JButton OkLabel = new JButton("Ok");
-				ChiperPanel.add(OkLabel, "cell 7 7,alignx center,aligny bottom");
-				OkLabel.addActionListener(okCipher_listener);
+
+		JButton CancelLabel = new JButton("Cancel");
+		ChiperPanel.add(CancelLabel, "cell 6 7,aligny bottom");
+
+		JButton OkLabel = new JButton("Ok");
+		ChiperPanel.add(OkLabel, "cell 7 7,alignx center,aligny bottom");
+		OkLabel.addActionListener(okCipher_listener);
 		okCipher_listener = new OkCipher_list();
 
 		// ------- tab decipher ---------------------------------------------------------------------------------------------------
@@ -204,9 +193,9 @@ public class Gui {
 
 		JLabel ReceiverId = new JLabel("Receiver ID");
 		Decipher.add(ReceiverId, "cell 0 0,alignx left,aligny top");
-		
+
 		idReceiverDecipherComboBox = new JComboBox<String>();
-		idReceiverDecipherComboBox.setModel(new DefaultComboBoxModel(idUsers.toArray()));
+		idReceiverDecipherComboBox.setModel(new DefaultComboBoxModel<String>(km.getAllUsers()));
 		Decipher.add(idReceiverDecipherComboBox, "cell 1 0 2 1,growx");
 
 		JLabel FileLabelDecipher = new JLabel("File");
@@ -298,9 +287,9 @@ public class Gui {
 
 		JLabel idUserRemoveLabel = new JLabel("ID");
 		removeUserPanel.add(idUserRemoveLabel, "cell 0 0,alignx trailing,aligny center");
-		
+
 		removeUserComboBox = new JComboBox<String>();
-		removeUserComboBox.setModel(new DefaultComboBoxModel(idUsers.toArray()));
+		removeUserComboBox.setModel(new DefaultComboBoxModel<String>(km.getAllUsers()));
 		removeUserPanel.add(removeUserComboBox, "cell 1 0 4 1,growx");
 
 		JButton cancelRemoveUserButton = new JButton("Cancel");
@@ -333,6 +322,7 @@ public class Gui {
 				inc.initCipher(cipherType, mode, "PKCS5Padding");
 				inc.writeCipherFile(filePath, IDSender, IDreceiver, sig);
 				
+
 
 
 				JOptionPane.showMessageDialog(null, "FIle cifrato con successo!");
@@ -389,9 +379,20 @@ public class Gui {
 				String paddingMode = paddingComboBox.getSelectedItem().toString();
 				int keyLenVer = Integer.parseInt(signKeySizeComboBox.getSelectedItem().toString());
 				String sigType = signTypeComboBox.getSelectedItem().toString();
+				
+			
+				if(km.newUser(ID, keyLenCod, paddingMode, keyLenVer, sigType) )
+					JOptionPane.showMessageDialog(null, "Nuovo utente inserito");
+				else
+					JOptionPane.showMessageDialog(null, "Impossibile aggiungere l'utente\n E' gia presente un utente con l'ID scelto", "Error", JOptionPane.ERROR_MESSAGE);
+					
 
-				km.newUser(ID, keyLenCod, paddingMode, keyLenVer, sigType);
-				JOptionPane.showMessageDialog(null, "Nuovo utente inserito");
+				// aggiorna comboBox
+				idSenderComboBox.setModel(new DefaultComboBoxModel<String>(km.getAllUsers()));
+				idReceiverComboBox.setModel(new DefaultComboBoxModel<String>(km.getAllUsers()));
+				idReceiverDecipherComboBox.setModel(new DefaultComboBoxModel<String>(km.getAllUsers()));
+				removeUserComboBox.setModel(new DefaultComboBoxModel<String>(km.getAllUsers()));
+
 			} catch (InvalidKeyException | NoSuchAlgorithmException | IOException | MyException e) {
 				JOptionPane.showMessageDialog(null, e.getStackTrace(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
@@ -403,8 +404,16 @@ public class Gui {
 			try {				
 				String ID = removeUserComboBox.getSelectedItem().toString();
 
-				km.removeUser(ID);
-				JOptionPane.showMessageDialog(null, "Utente rimosso");
+				if(km.removeUser(ID))
+					JOptionPane.showMessageDialog(null, "Utente rimosso");
+				else
+					JOptionPane.showMessageDialog(null, "Impossibile rimuovere l'utente", "Error", JOptionPane.ERROR_MESSAGE);
+				
+				// aggiorna comboBox
+				idSenderComboBox.setModel(new DefaultComboBoxModel<String>(km.getAllUsers()));
+				idReceiverComboBox.setModel(new DefaultComboBoxModel<String>(km.getAllUsers()));
+				idReceiverDecipherComboBox.setModel(new DefaultComboBoxModel<String>(km.getAllUsers()));
+				removeUserComboBox.setModel(new DefaultComboBoxModel<String>(km.getAllUsers()));
 			} catch (InvalidKeyException | IOException e) {
 				JOptionPane.showMessageDialog(null, e.getStackTrace(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
