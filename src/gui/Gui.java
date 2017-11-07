@@ -214,49 +214,52 @@ public class Gui {
 
 		// ------- tab decipher ---------------------------------------------------------------------------------------------------
 		// ------------------------------------------------------------------------------------------------------------------------
+		
+		
+		// ------------------------------------------------------------------------------------------------------------------------
 
 		JPanel Decipher = new JPanel();
 		JPane.addTab("Decipher", null, Decipher, null);
-		Decipher.setLayout(new MigLayout("", "[][][grow]", "[][][][grow]"));
+		Decipher.setLayout(new MigLayout("", "[][grow][grow][][][][][]", "[][22px][22px][grow][grow][grow][][]"));
 
 		JLabel ReceiverId = new JLabel("Receiver ID");
-		Decipher.add(ReceiverId, "cell 0 0,alignx left,aligny top");
+		Decipher.add(ReceiverId, "cell 0 0,alignx trailing");
 		idReceiverDecipherComboBox = new JComboBox<String>();
 		idReceiverDecipherComboBox.setModel(new DefaultComboBoxModel<String>(km.getAllUsers()));
-		Decipher.add(idReceiverDecipherComboBox, "cell 1 0 2 1,growx");
+		Decipher.add(idReceiverDecipherComboBox, "cell 1 0 6 1,growx");
 
 		JLabel keyLabelDecipher = new JLabel("Chiave privata");
-		Decipher.add(keyLabelDecipher, "cell 0 1,alignx left");
+		Decipher.add(keyLabelDecipher, "cell 0 1,alignx trailing");
 		pkey_decipher_textField = new JTextField();
-		Decipher.add(pkey_decipher_textField, "cell 1 1,growx");
+		Decipher.add(pkey_decipher_textField, "cell 1 1 6 1,growx");
 		pkey_decipher_textField.setEditable(false);
 		pkey_decipher_textField.setBackground(Color.white);
 		JButton keyloadButtonDecipher = new JButton("Browse...");
-		Decipher.add(keyloadButtonDecipher, "cell 2 1,alignx center");
+		Decipher.add(keyloadButtonDecipher, "cell 7 1,alignx center");
 		browseKey_decipher_listener = new BrowseKey_decipher_list();
 		keyloadButtonDecipher.addActionListener(browseKey_decipher_listener);
 
 		JLabel FileLabelDecipher = new JLabel("File Cifrato");
-		Decipher.add(FileLabelDecipher, "cell 0 2,alignx left");
+		Decipher.add(FileLabelDecipher, "cell 0 2,alignx trailing");
 		file_decipher_textField = new JTextField();
-		Decipher.add(file_decipher_textField, "cell 1 2,growx");
+		Decipher.add(file_decipher_textField, "cell 1 2 6 1,growx");
 		file_decipher_textField.setEditable(false);
 		file_decipher_textField.setBackground(Color.white);
 		JButton loadButtonDecipher = new JButton("Browse...");
-		Decipher.add(loadButtonDecipher, "cell 2 2,alignx center");
+		Decipher.add(loadButtonDecipher, "cell 7 2,alignx center");
 		browse2_listener = new Browse2_list();
 		loadButtonDecipher.addActionListener(browse2_listener);
 
 
 		result_decipher_textPane = new JTextPane();
 		result_decipher_textPane.setEditable(false);
-		Decipher.add(result_decipher_textPane, "cell 0 3 3 1,grow");
+		Decipher.add(result_decipher_textPane, "cell 0 3 8 3,grow");
 
 		JButton cancelButtonDecipher = new JButton("Cancel");
-		Decipher.add(cancelButtonDecipher, "flowx,cell 1 4,alignx right,aligny bottom");
+		Decipher.add(cancelButtonDecipher, "cell 6 7,aligny bottom");
 
 		JButton okButtonDecipher = new JButton("Ok");
-		Decipher.add(okButtonDecipher, "cell 2 4,alignx center,aligny bottom");
+		Decipher.add(okButtonDecipher, "cell 7 7,alignx center,aligny bottom");
 		okDecipher_listener = new OkDecipher_list();
 		okButtonDecipher.addActionListener(okDecipher_listener);
 
@@ -273,35 +276,35 @@ public class Gui {
 		addUserPanel.setLayout(new MigLayout("", "[12px][][grow][116px,grow][73px][55px][45px][5px][58px][5px][46px][5px][74px][55px][53px][120px]", "[][][][][][]"));
 
 		JLabel idNewUserLabel = new JLabel("ID");
-		addUserPanel.add(idNewUserLabel, "cell 1 0");
+		addUserPanel.add(idNewUserLabel, "cell 1 0,alignx trailing");
 
 		idNewUserTextField = new JTextField();
 		addUserPanel.add(idNewUserTextField, "cell 3 0 13 1,growx");
 		idNewUserTextField.setColumns(10);
 
 		JLabel rsaKeySizeLabel = new JLabel("RSA key size");
-		addUserPanel.add(rsaKeySizeLabel, "cell 1 1");
+		addUserPanel.add(rsaKeySizeLabel, "cell 1 1,alignx trailing");
 
 		rsaKeySizeComboBox = new JComboBox<String>();
 		rsaKeySizeComboBox.setModel(new DefaultComboBoxModel<String>(new String[] {"1024", "2048"}));
 		addUserPanel.add(rsaKeySizeComboBox, "cell 3 1 13 1,growx");
 
 		JLabel paddingLabel = new JLabel("Padding");
-		addUserPanel.add(paddingLabel, "cell 1 2");
+		addUserPanel.add(paddingLabel, "cell 1 2,alignx trailing");
 
 		paddingComboBox = new JComboBox<String>();
 		paddingComboBox.setModel(new DefaultComboBoxModel<String>(new String[] {"PKCS1Padding", "OAEPPadding"}));
 		addUserPanel.add(paddingComboBox, "cell 3 2 13 1,growx");
 
 		JLabel signKeySizeLabel = new JLabel("Sign key size");
-		addUserPanel.add(signKeySizeLabel, "cell 1 3");
+		addUserPanel.add(signKeySizeLabel, "cell 1 3,alignx trailing");
 
 		signKeySizeComboBox = new JComboBox<String>();
 		signKeySizeComboBox.setModel(new DefaultComboBoxModel<String>(new String[] {"1024", "2048"}));
 		addUserPanel.add(signKeySizeComboBox, "cell 3 3 13 1,growx");
 
 		JLabel signTypeLabel = new JLabel("Sign type");
-		addUserPanel.add(signTypeLabel, "cell 1 4");
+		addUserPanel.add(signTypeLabel, "cell 1 4,alignx trailing");
 
 		signTypeComboBox = new JComboBox<String>();
 		signTypeComboBox.setModel(new DefaultComboBoxModel<String>(new String[] {"SHA1withDSA", "SHA224withDSA", "SHA256withDSA"}));
