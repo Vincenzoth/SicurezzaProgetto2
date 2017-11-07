@@ -34,6 +34,7 @@ public class KeyManager {
 	final static String PATH = Paths.get(System.getProperty("user.dir")).toString();
 	final static String FILE_NAME = PATH + "/data/keys";
 	final static String FILE_KEY = PATH + "/data/keyOfkeys";
+	final static String PR_KEYS_PATH = PATH + "/keys/";
 
 	private KeyPairGenerator keyGenRSA;
 	private KeyPairGenerator keyGenSig;
@@ -74,7 +75,6 @@ public class KeyManager {
 		byte[] salt = new byte[] { 0x7d, 0x60, 0x43, 0x5f, 0x02, (byte) 0xe9, (byte) 0xe0, (byte) 0xae };
 
 		// Specifica della chiave
-		//KeySpec keySpec = new PBEKeySpec(password, password.toString().getBytes(), 65536, 192);
 		KeySpec keySpec = new PBEKeySpec(password, salt, 65536, 192);
 
 		// Genera una chiave generica
@@ -117,15 +117,31 @@ public class KeyManager {
 		// aggiungi alla mappa
 		User retValue = keys.put(newID, new User(newID, pairRSA.getPublic(), pairRSA.getPrivate(), modPadding, pairDSA.getPublic(), pairDSA.getPrivate(), sigType));
 
-		// aggiungi al file	
-		this.cipher.init(Cipher.ENCRYPT_MODE, key);
-		File keysFile = new File(FILE_NAME);
-		if(!keysFile.exists()) 			 
-			keysFile.getParentFile().mkdirs();
-		ObjectOutputStream oss;
-		oss = new ObjectOutputStream(new CipherOutputStream(new FileOutputStream(keysFile), cipher));
-		oss.writeObject(keys);
-		oss.close();
+		if( retValue == null) {
+			// aggiungi al file	
+			this.cipher.init(Cipher.ENCRYPT_MODE, key);
+			File keysFile = new File(FILE_NAME);
+			if(!keysFile.exists()) 			 
+				keysFile.getParentFile().mkdirs();
+			ObjectOutputStream oss;
+			oss = new ObjectOutputStream(new CipherOutputStream(new FileOutputStream(keysFile), cipher));
+			oss.writeObject(keys);
+			oss.close();
+
+			// scrivi i file della chiave
+			FileOutputStream fos;
+			File keysPath = new File(PR_KEYS_PATH);
+			if(!keysPath.exists()) 			 
+				keysPath.mkdirs();
+			fos = new FileOutputStream(new File(PR_KEYS_PATH + "privateKey_" + newID));
+			fos.write(pairRSA.getPrivate().getEncoded());
+			fos.flush();
+			fos = new FileOutputStream(new File(PR_KEYS_PATH + "privateSig_" + newID));
+			fos.write(pairDSA.getPrivate().getEncoded());
+			fos.flush();
+
+			fos.close();
+		}
 
 		return retValue != null ? false : true;
 	}

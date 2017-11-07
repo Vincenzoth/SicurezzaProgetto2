@@ -18,6 +18,7 @@ import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Arrays;
 
@@ -32,8 +33,6 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class Incapsula {
-
-	//final static String PATH = Paths.get(System.getProperty("user.dir")).toString();
 	final static int LENGTH_METAINFO_BASE = 49;
 
 	private String cifrario;
@@ -142,22 +141,27 @@ public class Incapsula {
 
 	}
 
-	public int writeDecipherFile(String file, String receiverID) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, MyException, InvalidAlgorithmParameterException, SignatureException {
+	public int writeDecipherFile(String file, String receiverID, String keyPath) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, MyException, InvalidAlgorithmParameterException, SignatureException {
 		int isValid = 0; 
-
-		FileInputStream fis = new FileInputStream(new File(file));
-	
-		//ottenere lunghezza blocco di cifratura
+		
+		// leggiamo la chiave
+		byte[] keyBytes = Files.readAllBytes(Paths.get(keyPath));
 		KeyFactory kf = KeyFactory.getInstance("RSA");
+		PrivateKey privateKey = kf.generatePrivate(new PKCS8EncodedKeySpec(keyBytes));
+
+		//ottenere lunghezza blocco di cifratura
 		RSAPublicKeySpec pub = kf.getKeySpec(km.getPublicKeyCod(receiverID), RSAPublicKeySpec.class);
 		int len = pub.getModulus().bitLength()/8;
+		
+		// leggiamo le informazioni dal file
+		FileInputStream fis = new FileInputStream(new File(file));
 		
 		byte[] cipherMetaInfo = new byte[len];
 		fis.read(cipherMetaInfo);
 		
 		// decifra le informazioni sul cifrario utilizzato
 		// il metodo lancia eccezione "Decryption error" se il destinatario non è quello giusto
-		byte[] depicherMetaInfo = decipherInfo(cipherMetaInfo, receiverID);
+		byte[] depicherMetaInfo = decipherInfo(cipherMetaInfo, receiverID, privateKey);
 		
 		String receiver = new String(depicherMetaInfo, 0, 8).replaceAll("\0", "");
 		
@@ -253,12 +257,11 @@ public class Incapsula {
 		
 	}
 
-	private byte[] decipherInfo(byte[] cipherMetaInfo, String receiver) throws NoSuchAlgorithmException,
+	private byte[] decipherInfo(byte[] cipherMetaInfo, String receiver, PrivateKey key) throws NoSuchAlgorithmException,
 	NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 
-		PrivateKey pk = km.getPrivateKeyCod(receiver);
 		Cipher c = Cipher.getInstance("RSA/ECB/"+km.getModPadding(receiver));
-		c.init(Cipher.DECRYPT_MODE, pk);
+		c.init(Cipher.DECRYPT_MODE, key);
 		return c.doFinal(cipherMetaInfo);
 
 	}

@@ -29,18 +29,18 @@ public class Test {
 			km.newUser("06", 2048, "OAEPPadding", 2048, "SHA1withDSA");
 			 */			
 
-			km.newUser("01", 2048, "PKCS1Padding", 1024, "SHA256withDSA");
-			km.newUser("02", 1024, "OAEPPadding", 1024, "SHA224withDSA");
-			km.newUser("03", 1024, "OAEPPadding", 1024, "SHA1withDSA");
+			km.newUser("giu", 2048, "PKCS1Padding", 1024, "SHA256withDSA");
+			km.newUser("mic", 1024, "OAEPPadding", 2048, "SHA224withDSA");
+			km.newUser("vin", 1024, "OAEPPadding", 1024, "SHA1withDSA");
 
 			
 			// Rimuovi utente
 			// km.removeUser("01");
 
-			PrivateKey privKeyCod = km.getPrivateKeyCod("02");
-			PublicKey pubKeyCod = km.getPublicKeyCod("02");
-			PrivateKey privKeyVer = km.getPrivateKeyVer("02");
-			PublicKey pubKeyVer = km.getPublicKeyVer("02");
+			PrivateKey privKeyCod = km.getPrivateKeyCod("giu");
+			PublicKey pubKeyCod = km.getPublicKeyCod("giu");
+			PrivateKey privKeyVer = km.getPrivateKeyVer("giu");
+			PublicKey pubKeyVer = km.getPublicKeyVer("giu");
 
 			System.out.println("Chiave privata: " + privKeyCod);
 			System.out.println("Chiave pubblica: " + pubKeyCod);
@@ -54,10 +54,10 @@ public class Test {
 			boolean sig = true;
 			Incapsula inc = new Incapsula(km);
 			inc.initCipher("DESede", "CBC", "PKCS5Padding");
-			inc.writeCipherFile(PATH + "/file/" + "documento.pdf", "05", "02", sig);		
+			inc.writeCipherFile(PATH + "/file/" + "documento.pdf", "giu", "vin", sig);		
 			System.out.println("File Criptato");
 
-			int isVer = inc.writeDecipherFile(PATH + "/file/" + "documento.pdf.ts", "02");
+			int isVer = inc.writeDecipherFile(PATH + "/file/" + "documento.pdf.ts", "vin", PATH+"/keys/privateKey_vin");
 			System.out.println("File decriptato");
 
 
