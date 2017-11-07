@@ -181,8 +181,8 @@ public class Gui {
 
 		JButton OkLabel = new JButton("Ok");
 		ChiperPanel.add(OkLabel, "cell 7 7,alignx center,aligny bottom");
-		OkLabel.addActionListener(okCipher_listener);
 		okCipher_listener = new OkCipher_list();
+		OkLabel.addActionListener(okCipher_listener);
 
 		// ------- tab decipher ---------------------------------------------------------------------------------------------------
 		// ------------------------------------------------------------------------------------------------------------------------
@@ -321,8 +321,6 @@ public class Gui {
 
 				inc.initCipher(cipherType, mode, "PKCS5Padding");
 				inc.writeCipherFile(filePath, IDSender, IDreceiver, sig);
-				
-
 
 
 				JOptionPane.showMessageDialog(null, "FIle cifrato con successo!");
