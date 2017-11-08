@@ -29,9 +29,9 @@ public class Test {
 			km.newUser("06", 2048, "OAEPPadding", 2048, "SHA1withDSA");
 			 */			
 
-			km.newUser("giu", 2048, "PKCS1Padding", 1024, "SHA256withDSA");
-			km.newUser("mic", 1024, "OAEPPadding", 2048, "SHA224withDSA");
-			km.newUser("vin", 1024, "OAEPPadding", 1024, "SHA1withDSA");
+			//km.newUser("giu", 2048, "PKCS1Padding", 1024, "SHA256withDSA");
+			//km.newUser("mic", 1024, "OAEPPadding", 2048, "SHA224withDSA");
+			//km.newUser("vin", 1024, "OAEPPadding", 1024, "SHA1withDSA");
 
 			
 			// Rimuovi utente
