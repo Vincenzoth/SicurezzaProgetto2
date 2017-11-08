@@ -473,8 +473,10 @@ public class Gui {
 				idReceiverDecipherComboBox.setModel(new DefaultComboBoxModel<String>(km.getAllUsers()));
 				removeUserComboBox.setModel(new DefaultComboBoxModel<String>(km.getAllUsers()));
 
-			} catch (InvalidKeyException | NoSuchAlgorithmException | IOException | MyException e) {
-				JOptionPane.showMessageDialog(null, e.getStackTrace(), "Error", JOptionPane.ERROR_MESSAGE);
+			} catch (InvalidKeyException | NoSuchAlgorithmException | IOException e) {
+				JOptionPane.showMessageDialog(null, e.getStackTrace(), "Errore", JOptionPane.ERROR_MESSAGE);
+			} catch (MyException e) {
+				JOptionPane.showMessageDialog(null, e.getMessage(), "Errore", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 	}

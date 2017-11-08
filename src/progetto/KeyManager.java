@@ -33,7 +33,6 @@ import javax.crypto.spec.SecretKeySpec;
 public class KeyManager {
 	final static String PATH = Paths.get(System.getProperty("user.dir")).toString();
 	final static String FILE_NAME = PATH + "/data/keys";
-	final static String FILE_KEY = PATH + "/data/keyOfkeys";
 	final static String PR_KEYS_PATH = PATH + "/keys/";
 
 	private KeyPairGenerator keyGenRSA;
@@ -101,8 +100,8 @@ public class KeyManager {
 	}
 
 	public boolean newUser(String newID, int keylengthRSA, String modPadding, int keyLengthSig, String sigType) throws IOException, InvalidKeyException, NoSuchAlgorithmException, MyException {
-		//if(sigType.equals("SHA1withDSA") && keyLengthSig == 2048 )
-		//throw new MyException("User "+newID+" Is not possible use SHA1withDSA with 2048 key!");
+		if(sigType.equals("SHA1withDSA") && keyLengthSig == 2048 )
+		throw new MyException("User "+newID+" Is not possible use SHA1withDSA with 2048 key!");
 
 		// Genera chiavi RSA
 		this.keyGenRSA = KeyPairGenerator.getInstance("RSA");
