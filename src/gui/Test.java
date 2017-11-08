@@ -37,6 +37,7 @@ public class Test {
 			// Rimuovi utente
 			// km.removeUser("01");
 
+			
 			PrivateKey privKeyCod = km.getPrivateKeyCod("giu");
 			PublicKey pubKeyCod = km.getPublicKeyCod("giu");
 			PrivateKey privKeyVer = km.getPrivateKeyVer("giu");
