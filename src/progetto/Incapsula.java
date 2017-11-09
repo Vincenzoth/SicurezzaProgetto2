@@ -43,11 +43,24 @@ public class Incapsula {
 	private Signature sig;
 	private KeyManager km;
 
-	public Incapsula(KeyManager km) throws InvalidKeyException, NoSuchAlgorithmException, ClassNotFoundException, IOException, NoSuchPaddingException, InvalidKeySpecException {
+	/**
+	 * Costruttore della classe Incapsula
+	 * @param km
+	 */
+	public Incapsula(KeyManager km) {
 
 		this.km = km;
 
 	}
+	
+	/**
+	 * Inizializza il cifrario della classe in base ai parametri passatigli come stringa.
+	 * @param cifrario (tipo di cifrario)
+	 * @param mode (modo operativo)
+	 * @param padding
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 */
 
 	public void initCipher(String cifrario, String mode, String padding)
 			throws NoSuchAlgorithmException, NoSuchPaddingException {
@@ -57,7 +70,17 @@ public class Incapsula {
 
 		cipher = Cipher.getInstance(cifrario + "/" + mode + "/" + padding);		
 	}
-
+	
+	
+	/**
+	 * Metodo relativo alla cifratura del file, crea un file con estensione .ts contenente 
+	 * le meta informazioni cifrate con un cifrario asimmetrico, la firma se richiesta e il messaggio cifrato
+	 * @param file (path del file da cifrare)
+	 * @param sender (ID mittente)
+	 * @param receiver (ID destinatario)
+	 * @param signature (indica se è richiesta la firma)
+	 * @param keyVerPath (path del file che contiene la chiave di firma)
+	 */
 	public void writeCipherFile(String file, String sender, String receiver, boolean signature, String keyVerPath) throws IllegalBlockSizeException,
 	BadPaddingException, IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, SignatureException, InvalidKeySpecException {
 		
@@ -66,8 +89,7 @@ public class Incapsula {
 		byte[] cipherFile = cipherFile(secretKey, file);
 		
 		// firma se richiesto
-		byte[] signatureBytes = null;
-		int sigLength = 0;
+		byte[] signatureBytes = null;		
 		if (signature) {		
 			sig = Signature.getInstance(km.getSigType(sender));
 			//Leggiamo chiave
@@ -79,12 +101,11 @@ public class Incapsula {
 			sig.update(Files.readAllBytes(Paths.get(file)));
 			// Generazione della firma digitale
 			signatureBytes = sig.sign();
-			
-			sigLength = signatureBytes.length;
+					
 		}
 		
 		// cifra meta informazioni
-		byte[] cipherInfo = cipherInfo(secretKey, sender, receiver, signature, sigLength);
+		byte[] cipherInfo = cipherInfo(secretKey, sender, receiver, signature);
 
 		// scrivi il file
 		FileOutputStream fos = new FileOutputStream(new File(file + ".ts"));
@@ -95,7 +116,11 @@ public class Incapsula {
 
 		fos.close();
 	}
-
+	
+	/**
+	 * Genera e restituisce una chiave simmetrica
+	 * @return chiave simmetrica	 
+	 */
 	private SecretKey genSecretKey() throws NoSuchAlgorithmException {
 		// Otteniamo un'istanza di KeyGenerator
 		KeyGenerator keyGenerator = null;
@@ -105,15 +130,30 @@ public class Incapsula {
 
 		return keyGenerator.generateKey();
 	}
-
+	
+	/**
+	 * Legge il file relativo al path file passato come parametro e lo cifra usando il cifrario della classe.
+	 * @param secretKey (chiave per il cifrario simmetrico)
+	 * @param file (path del file da cifrare)
+	 * @return Array di byte ottenuti dalla cifratura
+	 */
 	private byte[] cipherFile(SecretKey secretKey, String file)
 			throws IOException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
 		cipher.init(Cipher.ENCRYPT_MODE, secretKey);
 		return cipher.doFinal(Files.readAllBytes(Paths.get(file)));
 
 	}
-
-	private byte[] cipherInfo(SecretKey secretKey, String sender, String receiver, boolean signature, int sigLength)
+	
+	/**
+	 * Cifra il blocco di meta informazioni usando il cifrario asimmetrico e la
+	 * chiae pubblica del destinatario
+	 * @param secretKey (chiave simmetrica)
+	 * @param sender (ID mittente)
+	 * @param receiver (ID destinatario)
+	 * @param signature (Flag di firma)
+	 * @return Array di byte della cifratura
+	 */
+	private byte[] cipherInfo(SecretKey secretKey, String sender, String receiver, boolean signature)
 			throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
 			IllegalBlockSizeException, BadPaddingException {
 
@@ -145,6 +185,23 @@ public class Incapsula {
 
 	}
 
+	/**
+	 * Decifra il file cifrato indicato
+	 * @param file (path del file da decifrare)
+	 * @param receiverID (ID destinatario)
+	 * @param keyPath (path del file contentente la chiave privata)
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 * @throws InvalidKeySpecException
+	 * @throws IOException
+	 * @throws InvalidKeyException
+	 * @throws NoSuchPaddingException
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
+	 * @throws MyException
+	 * @throws InvalidAlgorithmParameterException
+	 * @throws SignatureException
+	 */
 	public int writeDecipherFile(String file, String receiverID, String keyPath) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, MyException, InvalidAlgorithmParameterException, SignatureException {
 		int isValid = 0; 
 		
