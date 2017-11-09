@@ -191,16 +191,6 @@ public class Incapsula {
 	 * @param receiverID (ID destinatario)
 	 * @param keyPath (path del file contentente la chiave privata)
 	 * @return
-	 * @throws NoSuchAlgorithmException
-	 * @throws InvalidKeySpecException
-	 * @throws IOException
-	 * @throws InvalidKeyException
-	 * @throws NoSuchPaddingException
-	 * @throws IllegalBlockSizeException
-	 * @throws BadPaddingException
-	 * @throws MyException
-	 * @throws InvalidAlgorithmParameterException
-	 * @throws SignatureException
 	 */
 	public int writeDecipherFile(String file, String receiverID, String keyPath) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, MyException, InvalidAlgorithmParameterException, SignatureException {
 		int isValid = 0; 
@@ -318,6 +308,13 @@ public class Incapsula {
 		
 	}
 
+	/**
+	 * Decifra il blocco di meta informazioni
+	 * @param cipherMetaInfo 
+	 * @param receiver(blocco di byte da decifrare)
+	 * @param key (chiave per il cifrario asimmetrico)
+	 * @return Array di byte delle meta info decifrate
+	 */
 	private byte[] decipherInfo(byte[] cipherMetaInfo, String receiver, PrivateKey key) throws NoSuchAlgorithmException,
 	NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 
@@ -327,6 +324,13 @@ public class Incapsula {
 
 	}
 	
+	/**
+	 * Verifica la firma
+	 * @param signatureBytes (Array di byte della firma)
+	 * @param data (Array di byte del messaggio firmato)
+	 * @param sender (ID mittente)
+	 * @return true se la firma è valida
+	 */
 	public Boolean verifySignature(byte[] signatureBytes, byte[] data, String sender) throws InvalidKeyException, SignatureException, NoSuchAlgorithmException {
 		// inizializza firma
 		sig = Signature.getInstance(km.getSigType(sender));

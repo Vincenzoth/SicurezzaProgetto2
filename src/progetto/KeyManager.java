@@ -41,7 +41,11 @@ public class KeyManager {
 	private SecretKey key;
 	private HashMap<String,User> keys;
 	private char[] password;
-
+	
+	/**
+	 * Il costruttore si occupa di popolare la mappa degli utenti keys.
+	 * @param password (permette di generare la chiave utilizzata nel cifrario)
+	 */
 	public KeyManager(String password) throws NoSuchAlgorithmException, NoSuchPaddingException, IOException, InvalidKeyException, ClassNotFoundException, InvalidKeySpecException {
 		// inizializza cifrario
 		this.cipher = Cipher.getInstance("DESede/ECB/PKCS5Padding");
@@ -55,7 +59,11 @@ public class KeyManager {
 		//popola la mappa
 		loadMap();
 	}
-
+	
+	/**
+	 * Se il file delle chiavi è presente decripta le informazioni contenute e le utilizza
+	 * per popolare la mappa degli utenti
+	 */
 	private void loadMap() throws InvalidKeyException, FileNotFoundException, IOException, ClassNotFoundException {
 		File f = new File(FILE_NAME);
 		if(f.exists() && !f.isDirectory()) { 
@@ -68,7 +76,11 @@ public class KeyManager {
 			ois.close();
 		}
 	}
-
+	
+	/**
+	 * Genera la chiave per decifrare il file delle chiavi a partire dalla password passata nel costruttore
+	 * @return secretKey
+	 */
 	private SecretKey loadKey() throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {		
 		SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
 		byte[] salt = new byte[] { 0x7d, 0x60, 0x43, 0x5f, 0x02, (byte) 0xe9, (byte) 0xe0, (byte) 0xae };
@@ -84,7 +96,11 @@ public class KeyManager {
 
 		return secretKey;
 	}
-
+	
+	/**
+	 * Genera una nuova chiave utilizzando una nuova password dopodichè ricifra il file delle chiavi 
+	 * @param newPassword (password utilizzata per generare una nuova chiave)
+	 */
 	public void renewKey(String newPassword) throws NoSuchAlgorithmException, IOException, InvalidKeyException, InvalidKeySpecException {
 		// genera una nuova chiave
 
@@ -98,7 +114,16 @@ public class KeyManager {
 		oss.writeObject(keys);
 		oss.close();		
 	}
-
+	
+	/**
+	 * Inserisce un nuovo utente all’interno della mappa degli utenti e all’interno del file delle chiavi
+	 * @param newID (ID nuovo utente)
+	 * @param keylengthRSA (lunghezza chiave RSA)
+	 * @param modPadding (tipo padding)
+	 * @param keyLengthSig (lunghezza della chiave per la firma)
+	 * @param sigType (tipo di firma)
+	 * @return true se l'inserimento va a buon fine, false se ID già presente 
+	 */
 	public boolean newUser(String newID, int keylengthRSA, String modPadding, int keyLengthSig, String sigType) throws IOException, InvalidKeyException, NoSuchAlgorithmException, MyException {
 		if(sigType.equals("SHA1withDSA") && keyLengthSig == 2048 )
 		throw new MyException("User "+newID+" Is not possible use SHA1withDSA with 2048 key!");
@@ -145,6 +170,11 @@ public class KeyManager {
 		return retValue != null ? false : true;
 	}
 
+	/**
+	 * Rimuove l'utente identificato dall'id userID dalla mappa e dal file delle chiavi.
+	 * @param userID (ID dell'utente da rimuovere)
+	 * @return true se la rimozione va a buon fine altrimenti false
+	 */
 	public boolean removeUser(String userID) throws InvalidKeyException, FileNotFoundException, IOException {
 		User retValue = keys.remove(userID);
 
@@ -158,31 +188,65 @@ public class KeyManager {
 		return retValue == null ? false : true;
 
 	}
-
+	
+	/**
+	 * Restituisce la chiave privata dell'utente userID
+	 * @param userID (ID dell'utente)
+	 * @return chiave privata dell'utente userID
+	 */
 	public PrivateKey getPrivateKeyCod(String userID) {
 		return keys.get(userID).getPrivKeyCod();
 	}
-
+	
+	/**
+	 * Restituisce la chiave privata dell'utente userID
+	 * @param userID (ID dell'utente)
+	 * @return chiave pubblica dell'utente userID
+	 */
 	public PublicKey getPublicKeyCod(String userID) {
 		return keys.get(userID).getPubKeyCod();
 	}
-
+	
+	/**
+	 * Restituisce la modalità di padding usata dall'utente userID
+	 * @param userID (ID dell'utente)
+	 * @return modalità di padding
+	 */
 	public String getModPadding(String userID) {
 		return keys.get(userID).getmodPadding();
 	}
-
+	
+	/**
+	 * Restituisce la chiave privata di verifica dell’utente userID.
+	 * @param userID (ID dell'utente) 
+	 * @return chiave privata di verifica dell'utente userID
+	 */
 	public PrivateKey getPrivateKeyVer(String userID) {
 		return keys.get(userID).getPrivKeyVer();
 	}
-
+	
+	/**
+	 * Restituisce la chiave pubblica di verifica dell’utente userID.
+	 * @param userID (ID dell'utente)
+	 * @return chiave pubblica di verifica dell'utente userID
+	 */
 	public PublicKey getPublicKeyVer(String userID) {
 		return keys.get(userID).getPubKeyVer();
 	}
-
+	
+	/**
+	 * Restituisce la tipologia di firma prevista per l’utente userID.
+	 * @param userID
+	 * @return tipologia di firma dell'utente userID
+	 */
 	public String getSigType(String userID) {
 		return keys.get(userID).getSigType();
 	}
-
+	
+	/**
+	 * Restituisce un array contente tutti gli ID degli utenti presenti nella mappa
+	 * @return Stringa di array contente gli ID degli utenti
+	 */
 	public String[] getAllUsers(){
 		ArrayList<String> usersID = new ArrayList<String>(); 
 		for (User user: keys.values()){			
